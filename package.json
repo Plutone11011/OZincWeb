@@ -1,0 +1,23 @@
+{
+  "name": "OMinizinc_web",
+  "version": "1.0.0",
+  "description": "A website to view minizinc results",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd backend && node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Plutone11011/OZinc_Web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Plutone11011/OZinc_Web/issues"
+  },
+  "homepage": "https://github.com/Plutone11011/OZinc_Web#readme",
+  "dependencies": {
+    "concurrently": "^5.0.0"
+  }
+}

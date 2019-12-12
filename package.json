@@ -19,5 +19,8 @@
   "homepage": "https://github.com/Plutone11011/OZinc_Web#readme",
   "dependencies": {
     "concurrently": "^5.0.0"
+  },
+  "engines": {
+    "node": "10.17.x"
   }
 }

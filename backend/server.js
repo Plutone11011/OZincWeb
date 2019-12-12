@@ -6,19 +6,13 @@ const { exec } = require('child_process');
 const MiniZnResults = require('./ResultParser');
 const ChangeTarget = require('./ChangeTarget');
 const fs = require('fs');
-const basicAuth = require('express-basic-auth');
-const dotenv = require('dotenv').config();
+//const dotenv = require('dotenv').config();
 const path = require('path');
-
+const basicAuth = require('express-basic-auth');
 
 const app = express();
 
 app.use(cors());
-
-app.use(basicAuth({
-    users:{ admin: process.env.PASSWORD },
-    challenge: true
-}));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -26,7 +20,16 @@ app.use(logger('dev'));
 
 app.use(express.static(path.join(__dirname, '../ozinc/build')));
 
-app.get('/',(req, res)=>{
+app.use(basicAuth({
+    challenge: true,
+    users: {
+        admin: process.env.PASSWORD
+    }        
+}));
+
+
+app.get('/' ,(req, res)=>{
+
     res.sendFile(path.join(__dirname, '../ozinc/build/index.html'))
 });
 
@@ -48,7 +51,12 @@ function launch_minizinc(response){
 
 app.get('/getMinizincResults',(req, res)=>{
     //launch minizinc and expect results
-    launch_minizinc(res);
+    try {
+        launch_minizinc(res);    
+    } catch (error) {
+        console.log(error);
+    }
+    
     
 });
 
@@ -62,6 +70,9 @@ app.put('/changeTarget', (req, res)=>{
         launch_minizinc(res);
     });
 });
-
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 8000;
+}
 // launch our backend into a port
-app.listen(8000, () => console.log('LISTENING ON PORT 8000'));
+app.listen(port, () => console.log('LISTENING ON PORT 8000'));

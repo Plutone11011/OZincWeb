@@ -37,7 +37,7 @@ app.get('/' ,(req, res)=>{
 });
 
 function launch_minizinc(response){
-    exec(`${process.env.HOME}/MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc ${process.env.HOME}/tmp/oils.mzn ${process.env.HOME}/oils-data.dzn`, (err, stdout, stderr)=>{
+    exec(`${process.env.HOME}/MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc ${process.env.HOME}/tmp/oils.mzn ${process.env.HOME}/tmp/oils-data.dzn`, (err, stdout, stderr)=>{
         //console.log(stdout);
         if (!stderr){
             let minizinc_results = new MiniZnResults();
@@ -98,7 +98,7 @@ app.put('/changeTarget', (req, res)=>{
         RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(), lines[i]);
     }
 
-    fs.writeFile(`${__dirname}/../tmp/oils-data.dzn`,changeTarget.datafile_getter, (err)=>{
+    fs.writeFile(`${process.env.HOME}/tmp/oils-data.dzn`,changeTarget.datafile_getter, (err)=>{
         if (err){
             throw err ;
         }

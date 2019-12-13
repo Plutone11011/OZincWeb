@@ -37,7 +37,7 @@ app.get('/' ,(req, res)=>{
 });
 
 function launch_minizinc(response){
-    exec(`${__dirname}/../MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc ${__dirname}/../tmp/oils.mzn ${__dirname}/../tmp/oils-data.dzn`, (err, stdout, stderr)=>{
+    exec(`${process.env.HOME}/MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc ${process.env.HOME}/tmp/oils.mzn ${process.env.HOME}/oils-data.dzn`, (err, stdout, stderr)=>{
         //console.log(stdout);
         if (!stderr){
             let minizinc_results = new MiniZnResults();
@@ -58,7 +58,7 @@ function createTempFileWithRedisData(key, filename, next){
         for (let item of items){
             recombined_string += `${item}\n`;
         }
-        fs.writeFile(`${__dirname}/../tmp/${filename}`,recombined_string, (err)=>{
+        fs.writeFile(`${process.env.HOME}/tmp/${filename}`,recombined_string, (err)=>{
             if (err){
                 throw err ;
             }

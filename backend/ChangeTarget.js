@@ -1,15 +1,25 @@
 const fs = require('fs');
+var RedisHandler = require('./RedisHandler');
 
 class changeTarget{
 
-    constructor(previous_target, next_target){
+    constructor(previous_target, next_target, next, res){
         //dzn file content
-        this.data_file_content = fs.readFileSync('oils-data.dzn','utf-8');
-        //need to put _ between spaces as is in the data file
-        this.previous_target_underscored = previous_target.replace(/\s/g,'_') ;
-        this.next_target_underscored = next_target.replace(/\s/g,'_') ;
-        //this index corresponds to the column index to swap in the matrix 
-        [this.index_to_swap, this.numberOfNonTarget] = this.next_target_index() ;
+        RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
+            this.data_file_content = '';
+            for (let item of items){
+                this.data_file_content += `${item}\n`;
+            }
+            //need to put _ between spaces as is in the data file
+            this.previous_target_underscored = previous_target.replace(/\s/g,'_') ;
+            this.next_target_underscored = next_target.replace(/\s/g,'_') ;
+            //this index corresponds to the column index to swap in the matrix 
+            [this.index_to_swap, this.numberOfNonTarget] = this.next_target_index() ;
+            console.log(this.data_file_content);
+            this.updateFiledata();
+            res.locals.changeTarget = this ;
+            next();//calls so that next operations are done after this
+        });
 
     }
     get datafile_getter(){

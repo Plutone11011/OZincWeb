@@ -48,8 +48,7 @@ output
   ["Oils Composition:\n"] ++ 
   [show("\(oil): \(show_float(0, 2, qty[oil] * 100))%") ++ "\n"| oil in Oils] ++
   ["\n----------\n"] ++
-  ["VOC Concentrations:\n"] ++
-  %output concentrations as if it was a python list of lists 
+  ["VOC Concentrations:\n"] ++ 
   ["["] ++ 
   [if voc == 1 then "[" else "" endif ++ 
   (show_float(0, 4, concentrations[voc, oil] * qty[oil])) ++  
@@ -62,12 +61,5 @@ output
   ["Target components:\n"] ++
   [show("\(voc): \(show_float(0, 2, concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
   ["\n----------\n"] ++
-  %["Threshold and sensitivity factors:\n"] ++
-  %[show_float(0,2,sensitivity[i] / threshold[i]) ++ " " | i in VOCs] ++ "\n"
-  %["\n----------\n"] ++
-  %["Concentration difference w.r.t. target oil:\n"] ++ 
-  %[show_float(0, 2, abs(concentrations_target[i] - concentrations_comp[i]))  ++ " " | 
-  %  i in index_set(concentrations_target)] ++
-  %["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
   [show_float(1, 2, obj) ++ "\n\n"] 

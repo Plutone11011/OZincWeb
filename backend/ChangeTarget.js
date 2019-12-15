@@ -15,7 +15,6 @@ class changeTarget{
             this.next_target_underscored = next_target.replace(/\s/g,'_') ;
             //this index corresponds to the column index to swap in the matrix 
             [this.index_to_swap, this.numberOfNonTarget] = this.next_target_index() ;
-            console.log(this.data_file_content);
             this.updateFiledata();
             res.locals.changeTarget = this ;
             next();//calls so that next operations are done after this

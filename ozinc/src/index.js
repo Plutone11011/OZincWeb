@@ -72,6 +72,10 @@ class App extends React.Component{
 
     render(){
         if (this.state.result){
+            const buttonStyles = {
+                display: 'flex',
+                alignItems: 'center'
+            }
             return(
                 <BrowserRouter>
                     <Navbar className="bg-olive" expand="lg" sticky='top'>
@@ -83,19 +87,19 @@ class App extends React.Component{
                                     <NavLink as={Link} to="/">Home</NavLink>
                                 </NavItem>
                                 <NavItem href="/data">
-                                    <NavLink as={Link} to="/data">Concentrations</NavLink>
+                                    <NavLink as={Link} to="/data">Concentrazioni</NavLink>
                                 </NavItem>
                                 <NavDropdown title="Target" id="basic-nav-dropdown" >
                                     {Object.keys(this.state.result["Oils Composition:"]).map((oil_names, index) => (
                                         <NavDropdown.Item key={'navdropdown'+oil_names} onClick={this.onOilsListClick}>{oil_names}</NavDropdown.Item> 
                                     ))}
                                 <NavDropdown.Item key={'navdropdown_target'} style={{color: '#708238'}} onClick={this.onOilsListClick}>{this.state.result['Target name:']}</NavDropdown.Item>
-                            </NavDropdown>
-                            </Nav>
-                            <Button variant="primary" disabled={this.isLoading} 
+                                </NavDropdown>
+                                <Button variant="primary" disabled={this.isLoading} 
                                 onClick={this.onButtonClick}>
                                 {this.isLoading ? 'Loading…' : 'Calcola'}
-                            </Button>
+                                </Button>
+                            </Nav>
                         </Navbar.Collapse>
                     </Navbar>
                     <Switch>

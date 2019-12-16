@@ -1,5 +1,6 @@
 const fs = require('fs');
 var RedisHandler = require('./RedisHandler');
+const utils = require('./utils');
 
 class changeTarget{
 
@@ -56,32 +57,17 @@ class changeTarget{
         //console.log(this.data_file_content);
     }
 
-    findVariableModelIndexes(model_variable_name){
-        let model_variable_index = this.data_file_content.search('\\b'+model_variable_name+'\\b');
-        let model_variable_target_index = this.data_file_content.search(`\\b${model_variable_name}_target\\b`);
-
-        return [model_variable_index, model_variable_target_index];
-    }
-
-    findArrayIndexes(model_variable_index, model_variable_target_index){
-        let begin_variable_array = this.data_file_content.indexOf('[',model_variable_index);
-        let end_variable_array = this.data_file_content.indexOf(']',begin_variable_array);
-        let begin_variable_target_array = this.data_file_content.indexOf('[', model_variable_target_index);
-        let end_variable_target_array = this.data_file_content.indexOf(']',begin_variable_target_array);
-
-        return [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array];
-    }
 
     //swap target array with the corresponding column
     updateMatrix(model_variable_name){
         let model_variable_index, model_variable_target_index;
-        [model_variable_index, model_variable_target_index] = this.findVariableModelIndexes(model_variable_name);
+        [model_variable_index, model_variable_target_index] = utils.findVariableModelIndexes(model_variable_name, this.data_file_content);
 
         //console.log(this.data_file_content.slice(model_variable_target_index));
 
         //find the indexes to slice the matrix and the target array
         let begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array ;
-        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = this.findArrayIndexes(model_variable_index, model_variable_target_index);
+        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils.findArrayIndexes('[',']',model_variable_index, model_variable_target_index, this.data_file_content);
         
         let model_variable_matrix = JSON.parse(this.data_file_content.slice(begin_variable_array, end_variable_array+1).replace(/\|/g,''));
         let model_target_array = JSON.parse(this.data_file_content.slice(begin_variable_target_array, end_variable_target_array+1));
@@ -120,8 +106,8 @@ class changeTarget{
         this.data_file_content = this.data_file_content.replace(this.data_file_content
             .slice(model_variable_index, end_variable_array+1),model_variable_name + ' = ' + model_variable_matrix_minizinc);
         //recomputes indexes since the string has been modified and so are the variables position in it
-        [model_variable_index, model_variable_target_index] = this.findVariableModelIndexes(model_variable_name);
-        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = this.findArrayIndexes(model_variable_index, model_variable_target_index);
+        [model_variable_index, model_variable_target_index] = utils.findVariableModelIndexes(model_variable_name,this.data_file_content);
+        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils.findArrayIndexes('[',']',model_variable_index, model_variable_target_index,this.data_file_content);
         this.data_file_content = this.data_file_content.replace(this.data_file_content
             .slice(model_variable_target_index, end_variable_target_array+1),`${model_variable_name}_target = ${model_target_array}`);
         console.log(this.data_file_content);

@@ -2,7 +2,7 @@ var router = require('express').Router();
 const { exec } = require('child_process');
 const fs = require('fs');
 //local modules
-var RedisHandler = require('../RedisHandler');
+const RedisHandler = require('../RedisHandler');
 const MiniZnResults = require('../ResultParser');
 const ChangeTarget = require('../ChangeTarget');
 

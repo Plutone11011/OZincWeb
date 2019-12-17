@@ -26,7 +26,8 @@ class App extends React.Component{
         this.state = {
             target: null,
             result: null,
-            isLoading: false
+            isLoading: false,
+            hidden: false
         } ; //it's gonna be set with minizinc parsed result and the target name
         this.onOilsListClick = this.onOilsListClick.bind(this);
         this.onButtonClick = this.onButtonClick.bind(this);
@@ -36,7 +37,10 @@ class App extends React.Component{
         fetch('/getMinizincResults')
             .then(response => response.json())
             .then((result) => {
-            this.setState({target: result['Target name:'], result: result});
+                
+
+                this.setState({target: result['Target name:'], result: result});
+                
             },
             (error)=>{
             console.log(error);  
@@ -76,8 +80,9 @@ class App extends React.Component{
                 display: 'flex',
                 alignItems: 'center'
             }
-            return(
-                <BrowserRouter>
+            if (!this.state.hidden){
+                return (
+                    <BrowserRouter>
                     <Navbar className="bg-olive" expand="lg" sticky='top'>
                         <Navbar.Brand href="">OZinc</Navbar.Brand>
                         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -93,12 +98,14 @@ class App extends React.Component{
                                     {Object.keys(this.state.result["Oils Composition:"]).map((oil_names, index) => (
                                         <NavDropdown.Item key={'navdropdown'+oil_names} onClick={this.onOilsListClick}>{oil_names}</NavDropdown.Item> 
                                     ))}
+                                
                                 <NavDropdown.Item key={'navdropdown_target'} style={{color: '#708238'}} onClick={this.onOilsListClick}>{this.state.result['Target name:']}</NavDropdown.Item>
                                 </NavDropdown>
                                 <Button variant="primary" disabled={this.isLoading} 
                                 onClick={this.onButtonClick}>
                                 {this.isLoading ? 'Loading…' : 'Calcola'}
                                 </Button>
+                                
                             </Nav>
                         </Navbar.Collapse>
                     </Navbar>
@@ -111,7 +118,38 @@ class App extends React.Component{
                         </Route>
                     </Switch>
                 </BrowserRouter>
-            );
+                );
+            } 
+            else {
+                return (
+                    <BrowserRouter>
+                        <Navbar className="bg-olive" expand="lg" sticky='top'>
+                            <Navbar.Brand href="">OZinc</Navbar.Brand>
+                            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                            <Navbar.Collapse id="basic-navbar-nav">
+                                <Nav className="mr-auto">
+                                    <NavItem href="/">
+                                        <NavLink as={Link} to="/">Home</NavLink>
+                                    </NavItem>
+                                    <NavItem href="/data">
+                                        <NavLink as={Link} to="/data">Concentrazioni</NavLink>
+                                    </NavItem>
+                                </Nav>
+                            </Navbar.Collapse>
+                        </Navbar>
+                        <Switch>
+                            <Route path="/data">
+                                <ChangeInputData/>
+                            </Route>
+                            <Route path="/">
+                                <OilsTable results={this.state.result} />
+                            </Route>
+                        </Switch>
+                    </BrowserRouter>
+                );
+            }
+                
+            
         }
         else {
             return(

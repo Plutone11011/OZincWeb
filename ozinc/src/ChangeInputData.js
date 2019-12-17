@@ -2,6 +2,7 @@ import React from "react";
 // Import React Table
 import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+import cellEditFactory, {Type} from 'react-bootstrap-table2-editor';
 
 
 class ChangeInputData extends React.Component {
@@ -20,16 +21,31 @@ class ChangeInputData extends React.Component {
         })
   }
 
+  onTableChange(type, newstate){
+
+  }
+
   render() {
     if (this.state.data){
         let columns = this.state.data['oils'].map((name, index)=>{
             
             return {
                 dataField: `oil${index}`,
-                text: name
+                text: name,
+                editor: Type.TEXTAREA,
+                validator: (newValue, row, column)=>{
+                  let found = /^((0(\.\d+)?)|([1-9]\d*(\.\d+)?))$/g.test(newValue);
+                  if (!found){
+                    return {
+                      valid: false,
+                      message: 'Not a decimal number'
+                    }
+                  }
+                  return found ;
+                }
             }
         });
-        columns.unshift({dataField: 'voc',text:'/'})
+        columns.unshift({dataField: 'voc',text:'/', editable: false});
         let products = [];
         this.state.data['concentrations'].forEach((conc, index)=>{
             
@@ -50,7 +66,13 @@ class ChangeInputData extends React.Component {
         });
         return (
         <div>
-            <BootstrapTable data={products} keyField='c_table' columns={columns} />
+            <BootstrapTable 
+              data={products} 
+              keyField='c_table' 
+              columns={columns} 
+              cellEdit={cellEditFactory({mode: 'click'})}
+              onTableChange={this.onTableChange}
+              />
         </div>
         );
     }

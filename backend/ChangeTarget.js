@@ -110,7 +110,6 @@ class changeTarget{
         [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils.findArrayIndexes('[',']',model_variable_index, model_variable_target_index,this.data_file_content);
         this.data_file_content = this.data_file_content.replace(this.data_file_content
             .slice(model_variable_target_index, end_variable_target_array+1),`${model_variable_name}_target = ${model_target_array}`);
-        console.log(this.data_file_content);
     }
 
     //here method that calls both updates and writes to file

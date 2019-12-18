@@ -11,22 +11,28 @@ class ChangeInputData extends React.Component {
     this.state = {
       data: null
     };
+    this.matrix = null;
+    this.rows = null;
+    this.columns = null;
   }
 
   componentDidMount(){
       fetch('/data/concentrations')
         .then(response => response.json())
         .then((res) => {
+            this.matrix = res['concentrations'];
+            console.log(this.matrix);
+            this.rows = res['voc'];
+            this.columns = res['oils'];
             this.setState({data: res});
         })
   }
 
-  onTableChange(type, newstate){
-
-  }
+  
 
   render() {
     if (this.state.data){
+
         let columns = this.state.data['oils'].map((name, index)=>{
             
             return {
@@ -45,7 +51,7 @@ class ChangeInputData extends React.Component {
                 }
             }
         });
-        columns.unshift({dataField: 'voc',text:'/', editable: false});
+        columns.unshift({dataField: 'voc',text:'Concentrazioni', editable: false});
         let products = [];
         this.state.data['concentrations'].forEach((conc, index)=>{
             
@@ -64,14 +70,21 @@ class ChangeInputData extends React.Component {
                 oil10: conc[10]
             });
         });
+
         return (
         <div>
             <BootstrapTable 
               data={products} 
               keyField='c_table' 
               columns={columns} 
-              cellEdit={cellEditFactory({mode: 'click'})}
-              onTableChange={this.onTableChange}
+              cellEdit={cellEditFactory({mode: 'click', afterSaveCell: (oldValue, newValue, row, column) => 
+                { 
+                  const columnIndex = this.columns.indexOf(column.text);
+                  const rowIndex = this.rows.indexOf(row.voc);
+                  this.matrix[rowIndex][columnIndex] = parseFloat(newValue) ;
+                  console.log(this.matrix);
+                 }})}
+
               />
         </div>
         );

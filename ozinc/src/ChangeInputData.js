@@ -1,97 +1,82 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 // Import React Table
-import BootstrapTable from 'react-bootstrap-table-next';
-import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import cellEditFactory, {Type} from 'react-bootstrap-table2-editor';
+import Paper from '@material-ui/core/Paper';
+import { Grid, Table, TableHeaderRow } from '@devexpress/dx-react-grid-material-ui';
 
 
-class ChangeInputData extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: null
-    };
-    this.matrix = null;
-    this.rows = null;
-    this.columns = null;
-  }
-
-  componentDidMount(){
-      fetch('/data/concentrations')
-        .then(response => response.json())
-        .then((res) => {
-            this.matrix = res['concentrations'];
-            console.log(this.matrix);
-            this.rows = res['voc'];
-            this.columns = res['oils'];
-            this.setState({data: res});
-        })
-  }
-
+//hooks here 
+function ChangeInputData(){
   
+  const [columns, setColumns] = useState(null);
+  const [rows, setRows] = useState(null);
+  const [tableColumnExtension, setTableColumnExtension] = useState(null);
 
-  render() {
-    if (this.state.data){
-
-        let columns = this.state.data['oils'].map((name, index)=>{
+  useEffect( () => fetch('/data/concentrations')
+      .then(response => response.json())
+      .then((res) => {
+        let columns, rows, extensions ;
+        columns = res['oils'].map((oil_name, index)=>{
             
-            return {
-                dataField: `oil${index}`,
-                text: name,
-                editor: Type.TEXTAREA,
-                validator: (newValue, row, column)=>{
-                  let found = /^((0(\.\d+)?)|([1-9]\d*(\.\d+)?))$/g.test(newValue);
-                  if (!found){
-                    return {
-                      valid: false,
-                      message: 'Not a decimal number'
-                    }
+          return {
+              name: oil_name,
+              title: oil_name,
+              /*editor: Type.TEXT,
+              validator: (newValue, row, column)=>{
+                let found = /^((0(\.\d+)?)|([1-9]\d*(\.\d+)?))$/g.test(newValue);
+                if (!found){
+                  return {
+                    valid: false,
+                    message: 'Not a decimal number'
                   }
-                  return found ;
                 }
-            }
+                return found ;
+              }*/
+          }
+      });
+        columns.unshift({name: 'concentrazioni',title:'Concentrazioni'});
+        setColumns(columns);
+        extensions =  columns.map((column)=>{
+          return {
+            columnName: column.name,
+            wordWrapEnabled: true 
+          }
         });
-        columns.unshift({dataField: 'voc',text:'Concentrazioni', editable: false});
-        let products = [];
-        this.state.data['concentrations'].forEach((conc, index)=>{
+        setTableColumnExtension(extensions);
+        rows = [];
+        res['concentrations'].forEach((conc, index)=>{
             
-            products.push( {
-                voc: this.state.data['voc'][index],
-                oil0: conc[0],
-                oil1: conc[1],
-                oil2: conc[2],
-                oil3: conc[3],
-                oil4: conc[4],
-                oil5: conc[5],
-                oil6: conc[6],
-                oil7: conc[7],
-                oil8: conc[8],
-                oil9: conc[9],
-                oil10: conc[10]
+            rows.push( {
+                concentrazioni: res['voc'][index],
+                [res['oils'][0]]: conc[0],
+                [res['oils'][1]]: conc[1],
+                [res['oils'][2]]: conc[2],
+                [res['oils'][3]]: conc[3],
+                [res['oils'][4]]: conc[4],
+                [res['oils'][5]]: conc[5],
+                [res['oils'][6]]: conc[6],
+                [res['oils'][7]]: conc[7],
+                [res['oils'][8]]: conc[8],
+                [res['oils'][9]]: conc[9],
+                [res['oils'][10]]: conc[10]
             });
         });
-
-        return (
-        <div>
-            <BootstrapTable 
-              data={products} 
-              keyField='c_table' 
-              columns={columns} 
-              cellEdit={cellEditFactory({mode: 'click', afterSaveCell: (oldValue, newValue, row, column) => 
-                { 
-                  const columnIndex = this.columns.indexOf(column.text);
-                  const rowIndex = this.rows.indexOf(row.voc);
-                  this.matrix[rowIndex][columnIndex] = parseFloat(newValue) ;
-                  console.log(this.matrix);
-                 }})}
-
-              />
-        </div>
-        );
-    }
-    else {
-        return <div></div>
-    }
+        setRows(rows);
+        })
+  ,[]);
+  /*
+  */
+  if (rows && columns){
+    return (
+      <Grid
+      rows={rows}
+      columns={columns}>
+      <Table columnExtensions={tableColumnExtension}/>
+      <TableHeaderRow />
+      </Grid>
+      );
+  }
+  else {
+    return <div></div>
   }
 }
 

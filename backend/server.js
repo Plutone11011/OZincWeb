@@ -31,10 +31,7 @@ app.use('/',require('./routes/index'));
 app.use('/data',require('./routes/data'));
 
 
-let port = process.env.PORT;
-if (port == null || port == "") {
-  port = 8000;
-}
+const port = process.env.PORT || 8000;
 // launch our backend into a port
 app.listen(port, function(){
     console.log(`Listening on port ${process.env.PORT}`);

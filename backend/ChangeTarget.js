@@ -7,10 +7,7 @@ class changeTarget{
     constructor(previous_target, next_target, next, res){
         //dzn file content
         RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
-            this.data_file_content = '';
-            for (let item of items){
-                this.data_file_content += `${item}\n`;
-            }
+            this.data_file_content = utils.recombineRedisString(items);
             //need to put _ between spaces as is in the data file
             this.previous_target_underscored = previous_target.replace(/\s/g,'_') ;
             this.next_target_underscored = next_target.replace(/\s/g,'_') ;
@@ -86,21 +83,8 @@ class changeTarget{
         model_variable_matrix = '[|' + model_variable_matrix.map(n => n.toString()).join() + '|]';//separator defaults to comma
         model_target_array = '[' + model_target_array.map(n => n.toString()).join() + ']';
 
-        //iterate to refill with | separators for minizinc
-        let comma_counter = 0 ;
-        var model_variable_matrix_minizinc = '';
-        for (let i = 0; i < model_variable_matrix.length; i++){
-            model_variable_matrix_minizinc += model_variable_matrix[i];
-            if (model_variable_matrix[i] == ','){
-                comma_counter++ ;
-            }
-            if (comma_counter == 10){
-                comma_counter = 0 ;
-                model_variable_matrix_minizinc += '|';
-
-            }
-        }
         
+        let model_variable_matrix_minizinc = utils.fillWithSeparators(model_variable_matrix,10);
         
 
         this.data_file_content = this.data_file_content.replace(this.data_file_content

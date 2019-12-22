@@ -4,9 +4,6 @@ const fs = require('fs');
 const RedisHandler = require('../RedisHandler');
 const utils = require('../utils');
 
-
-
-
 router.get('/',(req, res)=>{
     res.json('Data page');
 });
@@ -27,7 +24,6 @@ function getOilorVOCsNames(data, name){
     let oils_names = data.slice(begin_variable_array, end_variable_array+1)
         .replace(/_/g,' ').replace(/\n/g,'');
     
-    console.log(oils_names);
     //form an array out of the enum type in minizinc
     let oils_names_array = [], tmp = '';
     for (let ch of oils_names){
@@ -89,20 +85,82 @@ router.get('/concentrations',(req,res)=>{
 
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
 
-        let data = '';
-        for (let item of items){
-            data += `${item}\n`;
-        }
+        let data = utils.recombineRedisString(items);
         let result = {};
 
         
         result['oils'] = getOilorVOCsNames(data, 'Oils');
         result['voc'] = getOilorVOCsNames(data, 'VOCs');
         result['concentrations'] = getConcentrations(data);
-        console.log(result);
         res.json(result);
     });
         
 });
+
+router.put('/changeConcentrations',(req,res,next)=>{
+    
+    var data_file_content ;
+
+    RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
+        
+        const model_variable_name = 'concentrations';
+        let concentration_target_array = [] ;
+
+        data_file_content = utils.recombineRedisString(items);
+        console.log(data_file_content);
+        req.body.newCnc.forEach((val, index)=>{
+            concentration_target_array.push(parseFloat(val.splice(-1,1).join()));
+        });
+        let concentration_matrix_string = req.body.newCnc.join();
+        let concentration_target_string = concentration_target_array.join();
+    
+        
+        let model_variable_index, model_variable_target_index, begin_variable_array,
+            end_variable_array, end_variable_target_array, begin_variable_target_array ;
+    
+        //indexes
+        [model_variable_index, model_variable_target_index] = utils
+            .findVariableModelIndexes(model_variable_name, data_file_content);
+        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+            .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+        
+        concentration_matrix_string = `[| ${concentration_matrix_string} |]`;
+        concentration_target_string = `[${concentration_target_string}]`;
+
+        concentration_matrix_string = utils.fillWithSeparators(concentration_matrix_string,10);
+        data_file_content = data_file_content.replace(data_file_content
+            .slice(begin_variable_array,end_variable_array+1), concentration_matrix_string);
+        
+        //repeat bc might have changed size
+        [model_variable_index, model_variable_target_index] = utils
+            .findVariableModelIndexes(model_variable_name, data_file_content);
+        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+            .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+        
+        data_file_content = data_file_content.replace(data_file_content
+            .slice(begin_variable_target_array,end_variable_target_array+1), concentration_target_string);
+
+        res.locals.data_file_content = data_file_content ;
+        next();
+    });
+
+});
+
+router.put('/changeConcentrations',(req,res)=>{
+    RedisHandler.getRedisInstance().del(RedisHandler.getDataKey());
+
+    let data_file_content = res.locals.data_file_content;
+    const lines = data_file_content.split(/\r?\n/);
+    for (let line of lines){
+        RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(),line);        
+    }
+
+    fs.writeFile(`${__dirname}/../../tmp/oils-data.dzn`,data_file_content,(err)=>{
+        if (err) {
+            throw err;
+        }
+        res.sendStatus(200);
+    });
+})
 
 module.exports = router ;

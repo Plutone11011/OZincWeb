@@ -58,8 +58,7 @@ class App extends React.Component{
         })
             .then(response => response.json())
             .then((result)=>{
-                //update state with updated data
-                this.setState({target: result['Target name:'], result: result});
+                console.log(result);
             })
     }
 

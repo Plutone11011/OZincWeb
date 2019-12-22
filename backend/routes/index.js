@@ -1,10 +1,12 @@
 var router = require('express').Router();
 const { exec } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 //local modules
 const RedisHandler = require('../RedisHandler');
 const MiniZnResults = require('../ResultParser');
 const ChangeTarget = require('../ChangeTarget');
+const utils = require('../utils');
 
 router.get('/' ,(req, res)=>{
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'))
@@ -29,10 +31,9 @@ function launch_minizinc(response){
 
 function createTempFileWithRedisData(key, filename, next){
     RedisHandler.getRedisInstance().lrange(key,0,-1,(error, items)=>{
-        let recombined_string = '';
-        for (let item of items){
-            recombined_string += `${item}\n`;
-        }
+        
+        let recombined_string = utils.recombineRedisString(items);
+
         fs.writeFile(`${__dirname}/../../tmp/${filename}`,recombined_string, (err)=>{
             if (err){
                 throw err ;
@@ -77,6 +78,7 @@ router.put('/changeTarget', (req, res)=>{
         if (err){
             throw err ;
         }
+        res.sendStatus(200);
         //launch_minizinc(res);
     });
 });

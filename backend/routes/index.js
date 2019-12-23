@@ -9,6 +9,9 @@ const ChangeTarget = require('../ChangeTarget');
 const utils = require('../utils');
 
 router.get('/' ,(req, res)=>{
+    if (!fs.existsSync(`${process.env.HOME}/tmp`)){
+        fs.mkdirSync(`${process.env.HOME}/tmp`);
+    }
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'))
 });
 

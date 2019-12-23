@@ -35,10 +35,6 @@ function launch_minizinc(response){
         .catch(()=>{
             console.log("Couldn't change permissions");
         })
-        
-            
-
-    });
     
 }
 

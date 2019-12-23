@@ -1,6 +1,7 @@
 var router = require('express').Router();
 const { exec } = require('child_process');
 const fs = require('fs');
+const fsPromises = fs.fsPromises ;
 const path = require('path');
 //local modules
 const RedisHandler = require('../RedisHandler');
@@ -9,35 +10,44 @@ const ChangeTarget = require('../ChangeTarget');
 const utils = require('../utils');
 
 router.get('/' ,(req, res)=>{
-    if (!fs.existsSync(`${process.env.HOME}/tmp`)){
-        fs.mkdirSync(`${process.env.HOME}/tmp`);
-    }
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'))
 });
 
 
 function launch_minizinc(response){
-    exec(`${process.env.HOME}/MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc 
-    ${process.env.HOME}/tmp/oils.mzn ${process.env.HOME}/tmp/oils-data.dzn`, (err, stdout, stderr)=>{
-        //console.log(stdout);
-        if (!stderr){
-            let minizinc_results = new MiniZnResults();
-            minizinc_results.parse_results(stdout);
-            response.send(minizinc_results.get_result_object);
-        }
-        else {
-            console.log(stderr);
-            //send back standard response?
-        }
+    fsPromises.chmod(`${process.env.HOME}/tmp/oils.mzn`,0o666)
+        .then(()=>{
+            console.log("Access to all");
+        })
+        .then(()=>{
+            exec(`${process.env.HOME}/MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc 
+                ${process.env.HOME}/tmp/oils.mzn ${process.env.HOME}/tmp/oils-data.dzn`, (err, stdout, stderr)=>{
+            //console.log(stdout);
+            if (!stderr){
+                let minizinc_results = new MiniZnResults();
+                minizinc_results.parse_results(stdout);
+                response.send(minizinc_results.get_result_object);
+            }
+            else {
+                console.log(stderr);
+                //send back standard response?
+            }
+        })
+        .catch(()=>{
+            console.log("Couldn't change permissions");
+        })
+        
+            
 
     });
+    
 }
 
 function createTempFileWithRedisData(key, filename, next){
     RedisHandler.getRedisInstance().lrange(key,0,-1,(error, items)=>{
         
         let recombined_string = utils.recombineRedisString(items);
-
+        
         fs.writeFile(`${process.env.HOME}/tmp/${filename}`,recombined_string, (err)=>{
             if (err){
                 throw err ;

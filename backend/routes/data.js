@@ -155,7 +155,7 @@ router.put('/changeConcentrations',(req,res)=>{
         RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(),line);        
     }
 
-    fs.writeFile(`${__dirname}/../../tmp/oils-data.dzn`,data_file_content,(err)=>{
+    fs.writeFile(`${process.env.HOME}/tmp/oils-data.dzn`,data_file_content,(err)=>{
         if (err) {
             throw err;
         }

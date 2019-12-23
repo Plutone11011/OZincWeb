@@ -18,8 +18,6 @@ function launch_minizinc(response){
     fsPromises.chmod(`${process.env.HOME}/tmp/oils.mzn`,0o666)
         .then(()=>{
             console.log("Access to all");
-        })
-        .then(()=>{
             exec(`${process.env.HOME}/MiniZincIDE-2.3.2-bundle-linux/bin/minizinc --solver cbc 
                 ${process.env.HOME}/tmp/oils.mzn ${process.env.HOME}/tmp/oils-data.dzn`, (err, stdout, stderr)=>{
             //console.log(stdout);
@@ -32,6 +30,7 @@ function launch_minizinc(response){
                 console.log(stderr);
                 //send back standard response?
             }
+            });
         })
         .catch(()=>{
             console.log("Couldn't change permissions");

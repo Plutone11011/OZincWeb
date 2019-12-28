@@ -70,6 +70,7 @@ router.get('/getMinizincResults',(req, res)=>{
 
 
 router.put('/changeTarget', (req, res, next)=>{
+    console.log(req.body);
     new ChangeTarget(req.body.previousTarget, req.body.nextTarget, next, res);
 });
 

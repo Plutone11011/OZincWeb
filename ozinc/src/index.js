@@ -49,6 +49,7 @@ class App extends React.Component{
     }
 
     onOilsListClick(e){
+        console.log(e.target.text);
         fetch('/changeTarget',{
             method: 'PUT',
             headers: {

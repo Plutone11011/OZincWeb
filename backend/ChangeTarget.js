@@ -65,10 +65,8 @@ class changeTarget{
         //find the indexes to slice the matrix and the target array
         let begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array ;
         [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils.findArrayIndexes('[',']',model_variable_index, model_variable_target_index, this.data_file_content);
-        
-        let model_variable_matrix = JSON.parse(this.data_file_content.slice(begin_variable_array, end_variable_array+1).replace(/\|/g,''));
+        let model_variable_matrix = JSON.parse(this.data_file_content.slice(begin_variable_array, end_variable_array+1).replace(/\|/g,'').replace(/\s/g,''));
         let model_target_array = JSON.parse(this.data_file_content.slice(begin_variable_target_array, end_variable_target_array+1));
-
         //swap target array with the index_to_swap-th column
         var target_index = 0 ;
         for (let i = 0; i < model_variable_matrix.length; i++){
@@ -77,8 +75,7 @@ class changeTarget{
                 target_index++ ;
             }
         }
-
-        
+        //console.log(model_variable_matrix.slice(599));
 
         model_variable_matrix = '[|' + model_variable_matrix.map(n => n.toString()).join() + '|]';//separator defaults to comma
         model_target_array = '[' + model_target_array.map(n => n.toString()).join() + ']';

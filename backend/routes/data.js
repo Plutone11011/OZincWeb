@@ -64,6 +64,7 @@ function getConcentrations(data){
     [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
         .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data);
     
+    
     let concentration_target = JSON.parse(data.slice(begin_variable_target_array,end_variable_target_array + 1));
     //need to first replace |
     let concentration_str = data.slice(begin_variable_array,end_variable_array + 1).replace(/\|/g,'');
@@ -107,7 +108,6 @@ router.put('/changeConcentrations',(req,res,next)=>{
         let concentration_target_array = [] ;
 
         data_file_content = utils.recombineRedisString(items);
-        console.log(data_file_content);
         req.body.newCnc.forEach((val, index)=>{
             concentration_target_array.push(parseFloat(val.splice(-1,1).join()));
         });

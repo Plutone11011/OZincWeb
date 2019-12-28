@@ -51,7 +51,7 @@ output
   ["VOC Concentrations:\n"] ++ 
   ["["] ++ 
   [if voc == 1 then "[" else "" endif ++ 
-  (show_float(0, 4, concentrations[voc, oil] * qty[oil])) ++  
+  (show_float(0, 2, concentrations[voc, oil] * qty[oil])) ++  
    if voc == 70 /\ oil != 10 then "]," else if voc == 70 /\ oil == 10 then "]" else ", " endif endif
    | oil in Oils, voc in VOCs] ++ 
   ["]\n"] ++

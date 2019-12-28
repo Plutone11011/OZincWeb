@@ -62,4 +62,4 @@ output
   [show("\(voc): \(show_float(0, 2, concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
   ["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
-  [show_float(1, 2, obj) ++ "\n\n"] 
+  [show_float(1, 2, sum(voc in VOCs)(abs(concentrations_comp[voc] - concentrations_target[voc])))++ "\n\n"] 

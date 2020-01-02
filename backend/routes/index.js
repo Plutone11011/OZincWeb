@@ -9,6 +9,9 @@ const MiniZnResults = require('../ResultParser');
 const ChangeTarget = require('../ChangeTarget');
 const utils = require('../utils');
 
+//only in dev
+const minizinc_executable = process.platform == 'win32' ? 'minizinc.exe' : 'minizinc' ;
+
 router.get('/' ,(req, res)=>{
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'))
 });

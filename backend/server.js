@@ -38,6 +38,7 @@ app.listen(port, function(){
     let data = fs.readFileSync(`${__dirname}/oils-data.dzn`,'utf-8');
     let model = fs.readFileSync(`${__dirname}/oils.mzn`,'utf-8');
 
+    console.log(process.env.NODE_ENV);
     RedisHandler.populateRedis(RedisHandler.getModelKey(),model);
     RedisHandler.populateRedis(RedisHandler.getDataKey(),data);
 });

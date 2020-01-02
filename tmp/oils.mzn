@@ -51,7 +51,7 @@ output
   ["VOC Concentrations:\n"] ++ 
   ["["] ++ 
   [if voc == 1 then "[" else "" endif ++ 
-  (show_float(0, 4, concentrations[voc, oil] * qty[oil])) ++  
+  (show_float(0, 2, concentrations[voc, oil] * qty[oil])) ++  
    if voc == 70 /\ oil != 10 then "]," else if voc == 70 /\ oil == 10 then "]" else ", " endif endif
    | oil in Oils, voc in VOCs] ++ 
   ["]\n"] ++
@@ -62,5 +62,5 @@ output
   [show("\(voc): \(show_float(0, 4, concentrations_comp[voc] - concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
   ["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
-  [show_float(1, 2, obj) ++ "\n\n"] 
+  [show_float(1, 2, sum(voc in VOCs)(abs(concentrations_comp[voc] - concentrations_target[voc]))) ++ "\n\n"] 
 

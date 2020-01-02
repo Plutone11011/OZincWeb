@@ -9,6 +9,9 @@ const MiniZnResults = require('../ResultParser');
 const ChangeTarget = require('../ChangeTarget');
 const utils = require('../utils');
 
+//only in dev
+const minizinc_executable = process.platform == 'win32' ? 'minizinc.exe' : 'minizinc' ;
+
 router.get('/' ,(req, res)=>{
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'))
 });
@@ -18,7 +21,7 @@ function launch_minizinc(response){
     fsPromises.chmod(path.join(__dirname,'../../tmp/oils.mzn'),0o666)
         .then(()=>{
             console.log("Access to all");
-            exec(`${path.join(__dirname,'../../MiniZincIDE-2.3.2-bundle-linux/bin/minizinc')} --solver cbc ${path.join(__dirname,'../../tmp/oils.mzn')} ${path.join(__dirname,'../../tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
+            exec(`${path.join(__dirname,`../../MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(__dirname,'../../tmp/oils.mzn')} ${path.join(__dirname,'../../tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
             //console.log(stdout);
             if (!stderr){
                 let minizinc_results = new MiniZnResults();

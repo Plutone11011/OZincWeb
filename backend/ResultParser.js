@@ -6,7 +6,7 @@ class MiniZnResults{
             'Oils Composition:': {},
             'VOC Concentrations:': [],
             'Target name:': 'Commercial extra virgin olive oils Central Italy',
-            'Target components:': {},
+            'Target difference:': {},
             'Distance from target:': -1
         };
     }
@@ -57,7 +57,7 @@ class MiniZnResults{
                         this.result_object[current_key] = line.replace(/_/g,' ');
                         current_key = null ;
                         break ;
-                    case 'Target components:':
+                    case 'Target difference:':
                         try{
                             this.split_property(line, current_key);
                         }

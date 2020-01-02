@@ -58,8 +58,8 @@ output
   ["\n----------\n"] ++
   ["Target name:\n" ++ Target_name] ++
   ["\n----------\n"]++
-  ["Target components:\n"] ++
-  [show("\(voc): \(show_float(0, 2, concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
+  ["Target difference:\n"] ++
+  [show("\(voc): \(show_float(0, 4, concentrations_comp[voc] - concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
   ["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
   [show_float(1, 2, obj) ++ "\n\n"] 

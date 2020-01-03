@@ -58,7 +58,8 @@ class ChangeInputData extends React.Component {
 
   //save changes to server
   onButtonClick(){
-    fetch('/data/changeConcentrations',{
+    console.log(this.concentrations);
+    fetch('/data/changeData',{
       method: 'PUT',
       headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -119,7 +120,7 @@ class ChangeInputData extends React.Component {
         });
         return (
         <div>
-            <Button variant="primary" disabled={this.isLoading} 
+            <Button variant="primary"
                             onClick={this.onButtonClick}
                             style={{
                                 margin: '20px'

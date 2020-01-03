@@ -33,7 +33,6 @@ class MiniZnResults{
         const lines = mnzn_result.split(/\r?\n/);
         const result_object_keys = Object.keys(this.result_object);
         let current_key = null ;
-        console.log(lines);
         for (let line of lines){
             if (result_object_keys.includes(line)){
                 current_key = line ;
@@ -81,7 +80,6 @@ class MiniZnResults{
                 }
             }
         }
-        console.log(this.result_object);
     }
     
 }

@@ -28,7 +28,6 @@ function launch_minizinc(response){
                     response.json("No results");
                 }
                 else {
-                    console.log("Passa giusto");
                     let minizinc_results = new MiniZnResults();
                     minizinc_results.parse_results(stdout);
                     response.send(minizinc_results.get_result_object);

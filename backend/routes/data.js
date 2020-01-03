@@ -97,6 +97,7 @@ function getCosts(data){
     cost_target = parseFloat(data.slice(model_variable_target_index, data.indexOf(';',model_variable_target_index))
         .match(/((0(\.\d+)?)|([1-9]\d*(\.\d+)?))/g)[0]);
 
+    //again target cost last element
     cost_array.push(cost_target);
     return cost_array;
 
@@ -118,59 +119,92 @@ router.get('/concentrations',(req,res)=>{
         
 });
 
-router.put('/changeConcentrations',(req,res,next)=>{
+function changeConcentrations(data_file_content, concentration_matrix_string, concentration_target_string){
+    const model_variable_name = 'concentrations';
+    let model_variable_index, model_variable_target_index, begin_variable_array,
+            end_variable_array, end_variable_target_array, begin_variable_target_array ;
+    
+    //concentrations
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data_file_content);
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+    
+    concentration_matrix_string = `[| ${concentration_matrix_string} |]`;
+    concentration_target_string = `[${concentration_target_string}]`;
+
+    concentration_matrix_string = utils.fillWithSeparators(concentration_matrix_string,10);
+    data_file_content = data_file_content.replace(data_file_content
+        .slice(begin_variable_array,end_variable_array+1), concentration_matrix_string);
+    
+    //repeat bc might have changed size
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data_file_content);
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+    
+    data_file_content = data_file_content.replace(data_file_content
+        .slice(begin_variable_target_array,end_variable_target_array+1), concentration_target_string);
+    return data_file_content ;
+}
+
+function changeCosts(data_file_content, cost_array){
+
+    const model_variable_name = 'costs';
+    let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index,
+        cost_target;
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data_file_content);
+    
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+
+    cost_target = cost_array.pop();
+    data_file_content = data_file_content.replace(data_file_content.slice(begin_variable_array,end_variable_array+1)
+        , `[${cost_array.join()}]`);
+    
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data_file_content);
+    data_file_content = data_file_content.replace(data_file_content.slice(data_file_content.indexOf('=',model_variable_target_index) + 1, 
+        data_file_content.indexOf(';',model_variable_target_index)), cost_target);
+    //target?
+    return data_file_content;
+}
+
+router.put('/changeData',(req,res,next)=>{
     
     var data_file_content ;
 
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
         
-        const model_variable_name = 'concentrations';
+        
         let concentration_target_array = [] ;
 
         data_file_content = utils.recombineRedisString(items);
-        console.log(data_file_content);
+        
+        let cost_array = req.body.newCnc.shift();
+        //removes last element of each subarray to form target (except first array of costs)
         req.body.newCnc.forEach((val, index)=>{
             concentration_target_array.push(parseFloat(val.splice(-1,1).join()));
         });
         let concentration_matrix_string = req.body.newCnc.join();
         let concentration_target_string = concentration_target_array.join();
-    
         
-        let model_variable_index, model_variable_target_index, begin_variable_array,
-            end_variable_array, end_variable_target_array, begin_variable_target_array ;
-    
-        //indexes
-        [model_variable_index, model_variable_target_index] = utils
-            .findVariableModelIndexes(model_variable_name, data_file_content);
-        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
-            .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+        data_file_content = changeConcentrations(data_file_content, concentration_matrix_string, concentration_target_string);
+        data_file_content = changeCosts(data_file_content, cost_array);
+        //now costs
         
-        concentration_matrix_string = `[| ${concentration_matrix_string} |]`;
-        concentration_target_string = `[${concentration_target_string}]`;
-
-        concentration_matrix_string = utils.fillWithSeparators(concentration_matrix_string,10);
-        data_file_content = data_file_content.replace(data_file_content
-            .slice(begin_variable_array,end_variable_array+1), concentration_matrix_string);
-        
-        //repeat bc might have changed size
-        [model_variable_index, model_variable_target_index] = utils
-            .findVariableModelIndexes(model_variable_name, data_file_content);
-        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
-            .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
-        
-        data_file_content = data_file_content.replace(data_file_content
-            .slice(begin_variable_target_array,end_variable_target_array+1), concentration_target_string);
-
         res.locals.data_file_content = data_file_content ;
         next();
     });
 
 });
 
-router.put('/changeConcentrations',(req,res)=>{
+router.put('/changeData',(req,res)=>{
     RedisHandler.getRedisInstance().del(RedisHandler.getDataKey());
-
+   
     let data_file_content = res.locals.data_file_content;
+    //console.log(data_file_content);
     const lines = data_file_content.split(/\r?\n/);
     for (let line of lines){
         RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(),line);        

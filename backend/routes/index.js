@@ -24,12 +24,19 @@ function launch_minizinc(response){
             exec(`${path.join(__dirname,`../../MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(__dirname,'../../tmp/oils.mzn')} ${path.join(__dirname,'../../tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
             //console.log(stdout);
             if (!stderr){
-                let minizinc_results = new MiniZnResults();
-                minizinc_results.parse_results(stdout);
-                response.send(minizinc_results.get_result_object);
+                if (stdout.includes('UNSATISFIABLE') ){
+                    response.json("No results");
+                }
+                else {
+                    console.log("Passa giusto");
+                    let minizinc_results = new MiniZnResults();
+                    minizinc_results.parse_results(stdout);
+                    response.send(minizinc_results.get_result_object);
+                }
+                
             }
             else {
-                console.log(stderr);
+                console.log("Error"+stderr);
                 //send back standard response?
             }
             });
@@ -85,13 +92,14 @@ router.put('/changeTarget', (req, res)=>{
         RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(), lines[i]);
     }
 
-    fs.writeFile(path.join(__dirname,'../../tmp/oils-data.dzn'),changeTarget.datafile_getter, (err)=>{
+    res.sendStatus(200);//dovrò ritornare il nuovo ordine di nomi e target perché il client possa vederli
+    /*fs.writeFile(path.join(__dirname,'../../tmp/oils-data.dzn'),changeTarget.datafile_getter, (err)=>{
         if (err){
             throw err ;
         }
-        res.sendStatus(200);
+        
         //launch_minizinc(res);
-    });
+    });*/
 });
 
 module.exports = router ;

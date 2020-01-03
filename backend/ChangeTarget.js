@@ -100,7 +100,7 @@ class changeTarget{
     updateFiledata(){
         this.updateName();
         this.updateMatrix("concentrations");
-        this.updateMatrix("costs");
+        //this.updateMatrix("costs");
     }
 } 
 

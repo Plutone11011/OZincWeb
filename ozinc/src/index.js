@@ -28,7 +28,7 @@ class App extends React.Component{
             target: null,
             result: null,
             isLoading: false,
-            hidden: false
+            noResult: false 
         } ; //it's gonna be set with minizinc parsed result and the target name
         this.onOilsListClick = this.onOilsListClick.bind(this);
         this.onButtonClick = this.onButtonClick.bind(this);
@@ -36,15 +36,24 @@ class App extends React.Component{
 
     componentDidMount(){
         fetch('/getMinizincResults')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                  throw new Error("HTTP error, status = " + response.status);
+                }
+                return response.json();
+              })
             .then((result) => {
-                
-
-                this.setState({target: result['Target name:'], result: result});
-                
-            },
+                if (result === "No results"){
+                    console.log(this);
+                    this.setState({noResult: true});
+                }
+                else {
+                    this.setState({target: result['Target name:'], result: result, noResult: false});
+                }
+            })
+            .catch(
             (error)=>{
-            console.log(error);  
+                console.log(error);
             }); 
     }
 
@@ -65,22 +74,33 @@ class App extends React.Component{
     onButtonClick(){
         this.setState({isLoading: true});
         fetch('/getMinizincResults')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                  throw new Error("HTTP error, status = " + response.status);
+                }
+                return response.json();
+              })
             .then((result) => {
-            this.setState({target: result['Target name:'], result: result, isLoading: false});
-            },
+                if (result === "No results"){
+                    this.setState({noResult: true});
+                }
+                else {
+                    this.setState({target: result['Target name:'], result: result, isLoading: false, noResult: false});
+                }
+                
+            })
+            .catch(
             (error)=>{
-            console.log(error);  
+                console.log(error);
+                
             });
     }
 
     render(){
-        if (this.state.result){
-            const buttonStyles = {
-                display: 'flex',
-                alignItems: 'center'
-            }
-            return (
+        if (this.state.result || this.state.noResult){
+            if (this.state.noResult){
+                console.log("Noresult");
+                return (
                 <BrowserRouter>
                 <Navbar className="bg-olive" expand="lg" sticky='top'>
                     <Navbar.Brand href="">OZinc</Navbar.Brand>
@@ -91,7 +111,7 @@ class App extends React.Component{
                                 <NavLink as={Link} to="/">Home</NavLink>
                             </NavItem>
                             <NavItem href="/data">
-                                <NavLink as={Link} to="/data">Concentrazioni</NavLink>
+                                <NavLink as={Link} to="/data">Dati</NavLink>
                             </NavItem>
                             
                         </Nav>
@@ -103,38 +123,89 @@ class App extends React.Component{
                     </Route>
                     <Route path="/">
                         <div style={{
-                            display: 'flex',
-                            width: '30%',
-                            height: '50px',
-                            alignItems: 'center', 
-                            justifyContent: 'flex-start'
-                        }}>
-                        <DropdownButton 
-                            title="Target" 
-                            id={"dropdown-variants-primary"} 
-                            variant="primary" 
-                            style={{
-                                margin: '20px'
+                                display: 'flex',
+                                width: '30%',
+                                height: '50px',
+                                alignItems: 'center', 
+                                justifyContent: 'flex-start'
                             }}>
-                                {Object.keys(this.state.result["Oils Composition:"]).map((oil_names, index) => (
-                                    <Dropdown.Item eventKey={'navdropdown'+oil_names} onClick={this.onOilsListClick}>{oil_names}</Dropdown.Item> 
-                                ))}
+                            <Button variant="primary" disabled={this.isLoading} 
+                                onClick={this.onButtonClick}
+                                style={{
+                                    margin: '20px'
+                                }}>
+                                {'Calcola'}
+                            </Button>
+                            </div>
+                            <p style={{
+                                textAlign: 'center',
+                                fontSize: '2.5em'
+                            }}>{'Nessun risultato con questi dati!'}</p>
                             
-                        <Dropdown.Item eventKey={'navdropdown_target'} style={{color: '#708238'}} onClick={this.onOilsListClick}>{this.state.result['Target name:']}</Dropdown.Item>
-                        </DropdownButton>
-                        <Button variant="primary" disabled={this.isLoading} 
-                            onClick={this.onButtonClick}
-                            style={{
-                                margin: '20px'
+                        </Route>
+                    </Switch>
+                </BrowserRouter>
+                );
+            }
+            else {
+                console.log("Result");
+                return (
+                    <BrowserRouter>
+                    <Navbar className="bg-olive" expand="lg" sticky='top'>
+                        <Navbar.Brand href="">OZinc</Navbar.Brand>
+                        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                        <Navbar.Collapse id="basic-navbar-nav">
+                            <Nav className="mr-auto">
+                                <NavItem href="/">
+                                    <NavLink as={Link} to="/">Home</NavLink>
+                                </NavItem>
+                                <NavItem href="/data">
+                                    <NavLink as={Link} to="/data">Dati</NavLink>
+                                </NavItem>
+                                
+                            </Nav>
+                        </Navbar.Collapse>
+                    </Navbar>
+                    <Switch>
+                        <Route path="/data">
+                            <ChangeInputData/>
+                        </Route>
+                        <Route path="/">
+                            <div style={{
+                                display: 'flex',
+                                width: '30%',
+                                height: '50px',
+                                alignItems: 'center', 
+                                justifyContent: 'flex-start'
                             }}>
-                            {this.isLoading ? 'Loading…' : 'Calcola'}
-                        </Button>
-                        </div>
-                        <OilsTable results={this.state.result} />
-                    </Route>
-                </Switch>
-            </BrowserRouter>
-            );    
+                            <DropdownButton 
+                                title="Target" 
+                                id={"dropdown-variants-primary"} 
+                                variant="primary" 
+                                style={{
+                                    margin: '20px'
+                                }}>
+                                    {Object.keys(this.state.result["Oils Composition:"]).map((oil_names, index) => (
+                                        <Dropdown.Item eventKey={'navdropdown'+oil_names} onClick={this.onOilsListClick}>{oil_names}</Dropdown.Item> 
+                                    ))}
+                                
+                            <Dropdown.Item eventKey={'navdropdown_target'} style={{color: '#708238'}} onClick={this.onOilsListClick}>{this.state.result['Target name:']}</Dropdown.Item>
+                            </DropdownButton>
+                            <Button variant="primary" disabled={this.isLoading} 
+                                onClick={this.onButtonClick}
+                                style={{
+                                    margin: '20px'
+                                }}>
+                                {'Calcola'}
+                            </Button>
+                            </div>
+                            <OilsTable results={this.state.result} />
+                        </Route>
+                    </Switch>
+                </BrowserRouter>
+                );
+            }
+    
             
         }
         else {

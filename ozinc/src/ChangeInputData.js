@@ -31,8 +31,11 @@ class ChangeInputData extends React.Component {
       fetch('/data/concentrations')
         .then(response => response.json())
         .then((res) => {
+            console.log(res);
             this.rows = res['voc'];
+            this.rows.unshift('Costi');
             this.concentrations = res['concentrations'];
+            this.concentrations.unshift(res['costs']);
             this.columns = res['oils'];
             this.setState({data: res});
         })
@@ -69,6 +72,14 @@ class ChangeInputData extends React.Component {
   }
 
   render() {
+    const rowStyle = (row, rowIndex) => {
+      if (rowIndex == 0){
+        return {
+          backgroundColor: '#DBF3FA'
+        };
+      }
+      
+    };
     if (this.state.data){
         let columns = this.state.data['oils'].map((name, index)=>{
             
@@ -120,6 +131,7 @@ class ChangeInputData extends React.Component {
               data={products} 
               keyField='voc' 
               columns={columns}
+              rowStyle={ rowStyle }
               remote={ {
                 filter: false,
                 pagination: false,

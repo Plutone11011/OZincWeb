@@ -81,6 +81,27 @@ function getConcentrations(data){
     return concentration_matrix;
 }
 
+function getCosts(data){
+
+    const model_variable_name = 'costs';
+    let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index,
+        cost_array, cost_target;
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data);
+    
+
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data);
+    //ignore target index values
+    cost_array = JSON.parse(data.slice(begin_variable_array,end_variable_array + 1));
+    cost_target = parseFloat(data.slice(model_variable_target_index, data.indexOf(';',model_variable_target_index))
+        .match(/((0(\.\d+)?)|([1-9]\d*(\.\d+)?))/g)[0]);
+
+    cost_array.push(cost_target);
+    return cost_array;
+
+}
+
 router.get('/concentrations',(req,res)=>{
 
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
@@ -88,7 +109,7 @@ router.get('/concentrations',(req,res)=>{
         let data = utils.recombineRedisString(items);
         let result = {};
 
-        
+        result['costs'] = getCosts(data);
         result['oils'] = getOilorVOCsNames(data, 'Oils');
         result['voc'] = getOilorVOCsNames(data, 'VOCs');
         result['concentrations'] = getConcentrations(data);
@@ -155,12 +176,12 @@ router.put('/changeConcentrations',(req,res)=>{
         RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(),line);        
     }
 
-    fs.writeFile(path.join(__dirname,'../../tmp/oils-data.dzn'),data_file_content,(err)=>{
+    res.sendStatus(200);
+    /*fs.writeFile(path.join(__dirname,'../../tmp/oils-data.dzn'),data_file_content,(err)=>{
         if (err) {
             throw err;
         }
-        res.sendStatus(200);
-    });
+    });*/
 })
 
 module.exports = router ;

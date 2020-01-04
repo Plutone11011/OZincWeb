@@ -103,6 +103,21 @@ function getCosts(data){
 
 }
 
+function getThresholds(data){
+    const model_variable_name = 'threshold';
+    let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index,
+        thresholds ;
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data);
+    
+
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data);
+    //ignore target index values
+    thresholds = JSON.parse(data.slice(begin_variable_array,end_variable_array + 1));
+    return thresholds ; 
+}
+
 router.get('/concentrations',(req,res)=>{
 
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
@@ -114,6 +129,8 @@ router.get('/concentrations',(req,res)=>{
         result['oils'] = getOilorVOCsNames(data, 'Oils');
         result['voc'] = getOilorVOCsNames(data, 'VOCs');
         result['concentrations'] = getConcentrations(data);
+        result['thresholds'] = getThresholds(data);
+        console.log(result['thresholds']);
         res.json(result);
     });
         
@@ -171,6 +188,21 @@ function changeCosts(data_file_content, cost_array){
     return data_file_content;
 }
 
+function changeThresholds(data_file_content, thresholds){
+    const model_variable_name = 'threshold';
+    let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index;
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data_file_content);
+    
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('[',']',model_variable_index, model_variable_target_index, data_file_content);
+    
+    //ignore targets, will yield -1
+    data_file_content = data_file_content.replace(data_file_content.slice(begin_variable_array,end_variable_array+1)
+        , `[${thresholds.join()}]`);
+    return data_file_content;
+}
+
 router.put('/changeData',(req,res,next)=>{
     
     var data_file_content ;
@@ -178,13 +210,15 @@ router.put('/changeData',(req,res,next)=>{
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
         
         
-        let concentration_target_array = [] ;
+        let concentration_target_array = [], thresholds = [] ;
 
         data_file_content = utils.recombineRedisString(items);
         
         let cost_array = req.body.newCnc.shift();
+        cost_array.splice(-1,1); //eliminate last void character
         //removes last element of each subarray to form target (except first array of costs)
         req.body.newCnc.forEach((val, index)=>{
+            thresholds.push(parseFloat(val.splice(-1,1).join()));
             concentration_target_array.push(parseFloat(val.splice(-1,1).join()));
         });
         let concentration_matrix_string = req.body.newCnc.join();
@@ -192,6 +226,7 @@ router.put('/changeData',(req,res,next)=>{
         
         data_file_content = changeConcentrations(data_file_content, concentration_matrix_string, concentration_target_string);
         data_file_content = changeCosts(data_file_content, cost_array);
+        data_file_content = changeThresholds(data_file_content, thresholds);
         //now costs
         
         res.locals.data_file_content = data_file_content ;

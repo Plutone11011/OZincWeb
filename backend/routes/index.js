@@ -18,18 +18,24 @@ router.get('/' ,(req, res)=>{
 
 
 function launch_minizinc(response){
-    fsPromises.chmod(path.join(process.env.HOME,'tmp/oils.mzn'),0o666)
+    fsPromises.chmod(path.join(process.env.HOME,'/tmp/oils.mzn'),0o666)
         .then(()=>{
             console.log("Access to all");
-            exec(`${path.join(process.env.HOME,'MiniZincIDE-2.3.2-bundle-linux/bin/minizinc')} --solver cbc ${path.join(process.env.HOME,'tmp/oils.mzn')} ${path.join(process.env.HOME,'tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
+            exec(`${path.join(process.env.HOME,`/MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(process.env.HOME,'/tmp/oils.mzn')} ${path.join(process.env.HOME,'/tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
             //console.log(stdout);
             if (!stderr){
-                let minizinc_results = new MiniZnResults();
-                minizinc_results.parse_results(stdout);
-                response.send(minizinc_results.get_result_object);
+                if (stdout.includes('UNSATISFIABLE') ){
+                    response.json("No results");
+                }
+                else {
+                    let minizinc_results = new MiniZnResults();
+                    minizinc_results.parse_results(stdout);
+                    response.send(minizinc_results.get_result_object);
+                }
+                
             }
             else {
-                console.log(stderr);
+                console.log("Error"+stderr);
                 //send back standard response?
             }
             });
@@ -45,7 +51,7 @@ function createTempFileWithRedisData(key, filename, next){
         
         let recombined_string = utils.recombineRedisString(items);
         
-        fs.writeFile(path.join(process.env.HOME,`tmp/${filename}`),recombined_string, (err)=>{
+        fs.writeFile(path.join(process.env.HOME,`/tmp/${filename}`),recombined_string, (err)=>{
             if (err){
                 throw err ;
             }
@@ -86,13 +92,14 @@ router.put('/changeTarget', (req, res)=>{
         RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(), lines[i]);
     }
 
-    fs.writeFile(path.join(process.env.HOME,'tmp/oils-data.dzn'),changeTarget.datafile_getter, (err)=>{
+    res.sendStatus(200);//dovrò ritornare il nuovo ordine di nomi e target perché il client possa vederli
+    /*fs.writeFile(path.join(__dirname,'../../tmp/oils-data.dzn'),changeTarget.datafile_getter, (err)=>{
         if (err){
             throw err ;
         }
-        res.sendStatus(200);
+        
         //launch_minizinc(res);
-    });
+    });*/
 });
 
 module.exports = router ;

@@ -22,6 +22,7 @@ class ChangeInputData extends React.Component {
 
     //array for dataField of columns 
     this.columnsDataField = range(11).map( n => `oil${n}`);
+    this.columnsDataField.push('soglie');
 
     this.onTableChange = this.onTableChange.bind(this);
     this.onButtonClick = this.onButtonClick.bind(this);
@@ -31,9 +32,21 @@ class ChangeInputData extends React.Component {
       fetch('/data/concentrations')
         .then(response => response.json())
         .then((res) => {
+            console.log(res);
             this.rows = res['voc'];
+            this.rows.unshift('Costi');
             this.concentrations = res['concentrations'];
+            this.concentrations.unshift(res['costs']);
+            this.concentrations.forEach((arr, index)=>{
+              if (index > 0){
+                arr.push(res['thresholds'][index - 1]);
+              }
+              else {
+                arr.push('/');
+              }
+            });
             this.columns = res['oils'];
+            this.columns.push('Soglie');
             this.setState({data: res});
         })
   }
@@ -55,7 +68,8 @@ class ChangeInputData extends React.Component {
 
   //save changes to server
   onButtonClick(){
-    fetch('/data/changeConcentrations',{
+    console.log(this.concentrations);
+    fetch('/data/changeData',{
       method: 'PUT',
       headers: {
           'Content-type': 'application/json; charset=UTF-8'
@@ -69,6 +83,14 @@ class ChangeInputData extends React.Component {
   }
 
   render() {
+    const rowStyle = (row, rowIndex) => {
+      if (rowIndex == 0){
+        return {
+          backgroundColor: '#DBF3FA'
+        };
+      }
+      
+    };
     if (this.state.data){
         let columns = this.state.data['oils'].map((name, index)=>{
             
@@ -103,12 +125,13 @@ class ChangeInputData extends React.Component {
                 [this.columnsDataField[7]]: conc[7],
                 [this.columnsDataField[8]]: conc[8],
                 [this.columnsDataField[9]]: conc[9],
-                [this.columnsDataField[10]]: conc[10]
+                [this.columnsDataField[10]]: conc[10],
+                [this.columnsDataField[11]]: conc[11] //soglie
             });
         });
         return (
         <div>
-            <Button variant="primary" disabled={this.isLoading} 
+            <Button variant="primary"
                             onClick={this.onButtonClick}
                             style={{
                                 margin: '20px'
@@ -120,6 +143,7 @@ class ChangeInputData extends React.Component {
               data={products} 
               keyField='voc' 
               columns={columns}
+              rowStyle={ rowStyle }
               remote={ {
                 filter: false,
                 pagination: false,

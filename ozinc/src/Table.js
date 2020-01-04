@@ -18,17 +18,19 @@ class OilsTable extends React.Component {
 
       const target_name = this.props.results["Target name:"];
       const target_distance = this.props.results["Distance from target:"];
-
-      const target_components_names = Object.keys(this.props.results['Target components:']);
+      const total_price = this.props.results["Total price:"]
+      const target_components_names = Object.keys(this.props.results['Target difference:']);
       const target_components_values = target_components_names.map(key => {
-        return this.props.results['Target components:'][key];
+        return this.props.results['Target difference:'][key];
       });
 
       //const voc_concentrations = Function(`"use strict"; return ${this.props.results["VOC Concentrations:"]}`)();
       const voc_concentrations = JSON.parse(this.props.results["VOC Concentrations:"]);
       return (
         <div className="App">
-          <p>{`Distanza dal target: ${target_distance}`}</p>
+          <p style={{ marginBottom: '0px'}}>{`Costo totale: ${total_price}`}</p>
+          <p style={{ marginBottom: '0px'}}>{`Distanza dal target: ${target_distance}`}</p>
+          <small>(Somma di tutte le differenze tra i componenti del target e la composizione percentuale di oli)</small>
           <Table responsive="sm" bordered='true'>
             <thead>
               <tr>

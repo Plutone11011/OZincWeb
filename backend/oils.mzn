@@ -16,8 +16,8 @@ array [VOCs] of float: threshold;
 %the higher the sensitivity, the more the distance should be minimized  
 array [VOCs] of float: sensitivity;
 
-array [VOCs, Oils] of float: costs ;
-array [VOCs] of float :costs_target ;
+array [Oils] of float: costs ;
+float :costs_target ;
 % qty[o] = quantity of oil o (in fraction) in the final oil composition.
 array [Oils] of var 0.0..1.0: qty;
 
@@ -29,7 +29,7 @@ array [VOCs] of var float: concentrations_comp = [
 % the sum of the quantities must be 1.
 constraint sum(qty) = 1.0;
 %temporary constraint
-constraint sum(oil in Oils) (qty[oil] * (sum (voc in VOCs) (costs[voc, oil]))) <= MAX_COST ;
+constraint sum(oil in Oils) (qty[oil] * costs[oil]) <= MAX_COST ;
 % Manhattan distance between x and y (normalized).
 function var float:
 dist(array[int] of var float: x, array[int] of var float: y, array[int] of var float: th, array[int] of var float: s) = let {
@@ -58,8 +58,11 @@ output
   ["\n----------\n"] ++
   ["Target name:\n" ++ Target_name] ++
   ["\n----------\n"]++
-  ["Target components:\n"] ++
-  [show("\(voc): \(show_float(0, 2, concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
+  ["Target difference:\n"] ++
+  [show("\(voc): \(show_float(0, 4, concentrations_comp[voc] - concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
   ["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
-  [show_float(1, 2, sum(voc in VOCs)(abs(concentrations_comp[voc] - concentrations_target[voc])))++ "\n\n"] 
+  [show_float(1, 2, obj) ++ "\n"] ++
+  ["\n----------\n"] ++
+  ["Total price:\n"] ++
+  [show_float(1,2, sum (oil in Oils) (qty[oil]*costs[oil]))] 

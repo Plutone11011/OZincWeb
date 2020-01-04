@@ -6,8 +6,9 @@ class MiniZnResults{
             'Oils Composition:': {},
             'VOC Concentrations:': [],
             'Target name:': 'Commercial extra virgin olive oils Central Italy',
-            'Target components:': {},
-            'Distance from target:': -1
+            'Target difference:': {},
+            'Distance from target:': -1,
+            'Total price:':0
         };
     }
 
@@ -32,7 +33,6 @@ class MiniZnResults{
         const lines = mnzn_result.split(/\r?\n/);
         const result_object_keys = Object.keys(this.result_object);
         let current_key = null ;
-
         for (let line of lines){
             if (result_object_keys.includes(line)){
                 current_key = line ;
@@ -57,7 +57,7 @@ class MiniZnResults{
                         this.result_object[current_key] = line.replace(/_/g,' ');
                         current_key = null ;
                         break ;
-                    case 'Target components:':
+                    case 'Target difference:':
                         try{
                             this.split_property(line, current_key);
                         }
@@ -70,13 +70,16 @@ class MiniZnResults{
                         this.result_object[current_key] = line ;
                         current_key = null ;
                         break ;
+                    case 'Total price:':
+                        this.result_object[current_key] = line ;
+                        current_key = null ;
+                        break ;
                     default:
                         //e.g. empty lines or other characters
                         break ;
                 }
             }
         }
-        //console.log(this.result_object);
     }
     
 }

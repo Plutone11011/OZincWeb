@@ -3,6 +3,7 @@ const redis = require('redis');
 var redis_handler = (function(){
 
     const redisInstance = redis.createClient(process.env.REDIS_URL);
+    //var lock = require('redis-lock')(redisInstance);
     //redis keys
     const model_key = 'model',
         data_key = 'data';
@@ -38,6 +39,7 @@ var redis_handler = (function(){
     function getDataKey(){
         return data_key;
     }
+
     return {
         populateRedis: populateRedis,
         getRedisInstance: getRedisInstance,

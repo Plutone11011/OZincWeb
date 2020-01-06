@@ -204,10 +204,7 @@ function changeThresholds(data_file_content, thresholds){
     return data_file_content;
 }
 
-router.put('/changeData',(req,res,next)=>{
-    
-    var data_file_content ;
-
+function redisTransaction(req, res){
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
         
         
@@ -229,29 +226,39 @@ router.put('/changeData',(req,res,next)=>{
         data_file_content = changeCosts(data_file_content, cost_array);
         data_file_content = changeThresholds(data_file_content, thresholds);
         //now costs
-        
-        res.locals.data_file_content = data_file_content ;
-        next();
+        let lines = data_file_content.split(/\r?\n/);
+            
+        RedisHandler.getRedisInstance().multi()
+            .del(RedisHandler.getDataKey())
+            .rpush(RedisHandler.getDataKey(), ...lines)
+            .exec((e, results)=>{
+                
+                if (e){
+                    throw e ;
+                }
+                if (!results){
+                    redisTransaction(req, res);
+                }
+                else {
+                    res.sendStatus(200);
+                }
+                
+            });        
+    });    
+
+}
+
+router.put('/changeData',(req,res,next)=>{
+    
+    var data_file_content ;
+    RedisHandler.getRedisInstance().watch(RedisHandler.getDataKey(), (err)=>{
+        if (err) {
+            throw err ;
+        }
+        redisTransaction(req, res);
     });
 
+
 });
-
-router.put('/changeData',(req,res)=>{
-    RedisHandler.getRedisInstance().del(RedisHandler.getDataKey());
-   
-    let data_file_content = res.locals.data_file_content;
-    //console.log(data_file_content);
-    const lines = data_file_content.split(/\r?\n/);
-    for (let line of lines){
-        RedisHandler.getRedisInstance().rpush(RedisHandler.getDataKey(),line);        
-    }
-
-    res.sendStatus(200);
-    /*fs.writeFile(path.join(__dirname,'../../tmp/oils-data.dzn'),data_file_content,(err)=>{
-        if (err) {
-            throw err;
-        }
-    });*/
-})
 
 module.exports = router ;

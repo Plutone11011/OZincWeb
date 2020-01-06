@@ -119,6 +119,15 @@ function getThresholds(data){
     return thresholds ; 
 }
 
+function getScalarizationFactors(data, model_variable_name){
+
+    let model_variable_index;
+    model_variable_index = data.indexOf(model_variable_name);
+    
+
+    return data.slice(data.indexOf('=',model_variable_index)+1, data.indexOf(';', model_variable_index)).trim();
+}
+
 router.get('/concentrations',(req,res)=>{
 
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
@@ -131,7 +140,9 @@ router.get('/concentrations',(req,res)=>{
         result['voc'] = getOilorVOCsNames(data, 'VOCs');
         result['concentrations'] = getConcentrations(data);
         result['thresholds'] = getThresholds(data);
-        console.log(result['thresholds']);
+        result['distance_factor'] = getScalarizationFactors(data, 'distance_factor');
+        result['cost_factor'] = getScalarizationFactors(data, 'cost_factor');
+        //console.log(result);
         res.json(result);
     });
         
@@ -168,7 +179,7 @@ function changeConcentrations(data_file_content, concentration_matrix_string, co
 
 function changeCosts(data_file_content, cost_array){
 
-    const model_variable_name = 'costs';
+    let model_variable_name = 'costs';
     let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index,
         cost_target;
     [model_variable_index, model_variable_target_index] = utils
@@ -181,11 +192,16 @@ function changeCosts(data_file_content, cost_array){
     data_file_content = data_file_content.replace(data_file_content.slice(begin_variable_array,end_variable_array+1)
         , `[${cost_array.join()}]`);
     
-    [model_variable_index, model_variable_target_index] = utils
-        .findVariableModelIndexes(model_variable_name, data_file_content);
-    data_file_content = data_file_content.replace(data_file_content.slice(data_file_content.indexOf('=',model_variable_target_index) + 1, 
-        data_file_content.indexOf(';',model_variable_target_index)), cost_target);
-    //target?
+
+    const equal_index = data_file_content.indexOf('=',model_variable_target_index);
+    
+    const comma_index = data_file_content.indexOf(';',equal_index);
+
+    let sliced_string = data_file_content.slice(equal_index+1,comma_index);
+    sliced_string = sliced_string.replace(sliced_string, cost_target);
+
+    data_file_content = data_file_content.slice(0,equal_index+1) + sliced_string + data_file_content.slice(comma_index);
+    
     return data_file_content;
 }
 
@@ -204,13 +220,31 @@ function changeThresholds(data_file_content, thresholds){
     return data_file_content;
 }
 
+function changeFactors(data_file_content, model_variable_name, factor){
+
+    let model_variable_index;
+    model_variable_index = data_file_content.indexOf(model_variable_name);
+    //console.log(data_file_content.slice(data_file_content.indexOf('=',model_variable_index)+1, data_file_content.indexOf(';', model_variable_index)).trim());
+    const equal_index = data_file_content.indexOf('=',model_variable_index);
+    
+    const comma_index = data_file_content.indexOf(';',equal_index);
+    console.log(data_file_content.slice(equal_index+1, comma_index));
+    //perform replace on sliced string because 
+    let sliced_string = data_file_content.slice(equal_index+1, comma_index);
+    sliced_string = sliced_string.replace(sliced_string, factor);
+    data_file_content = data_file_content.slice(0,equal_index+1) + sliced_string + data_file_content.slice(comma_index);
+    
+    return data_file_content ;
+}
+
 function redisTransaction(req, res){
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
-        
+        console.log(req.body.newFactors);
+        console.log(items);
         
         let concentration_target_array = [], thresholds = [] ;
 
-        data_file_content = utils.recombineRedisString(items);
+        let data_file_content = utils.recombineRedisString(items);
         
         let cost_array = req.body.newCnc.shift();
         cost_array.splice(-1,1); //eliminate last void character
@@ -225,6 +259,9 @@ function redisTransaction(req, res){
         data_file_content = changeConcentrations(data_file_content, concentration_matrix_string, concentration_target_string);
         data_file_content = changeCosts(data_file_content, cost_array);
         data_file_content = changeThresholds(data_file_content, thresholds);
+        data_file_content = changeFactors(data_file_content,'distance_factor', req.body.newFactors.distance);
+        data_file_content = changeFactors(data_file_content,'cost_factor', req.body.newFactors.cost);
+        //console.log(data_file_content);
         //now costs
         let lines = data_file_content.split(/\r?\n/);
             
@@ -237,6 +274,7 @@ function redisTransaction(req, res){
                     throw e ;
                 }
                 if (!results){
+                    console.log('recursion..');
                     redisTransaction(req, res);
                 }
                 else {
@@ -249,8 +287,6 @@ function redisTransaction(req, res){
 }
 
 router.put('/changeData',(req,res,next)=>{
-    
-    var data_file_content ;
     RedisHandler.getRedisInstance().watch(RedisHandler.getDataKey(), (err)=>{
         if (err) {
             throw err ;

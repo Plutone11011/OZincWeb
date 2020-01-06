@@ -5,7 +5,8 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import cellEditFactory, {Type} from 'react-bootstrap-table2-editor';
 import Button from 'react-bootstrap/Button';
-
+import NumericInput from 'react-numeric-input';
+import './ChangeInputData.css';
 
 class ChangeInputData extends React.Component {
   constructor(props) {
@@ -24,8 +25,13 @@ class ChangeInputData extends React.Component {
     this.columnsDataField = range(11).map( n => `oil${n}`);
     this.columnsDataField.push('soglie');
 
+    //numeric factors
+    this.cost_factor = 0 ;
+    this.distance_factor = 0 ;
+
     this.onTableChange = this.onTableChange.bind(this);
     this.onButtonClick = this.onButtonClick.bind(this);
+    this.onNumChange = this.onNumChange.bind(this);
   }
 
   componentDidMount(){
@@ -47,6 +53,8 @@ class ChangeInputData extends React.Component {
             });
             this.columns = res['oils'];
             this.columns.push('Soglie');
+            this.cost_factor = res['cost_factor'];
+            this.distance_factor = res['distance_factor'];
             this.setState({data: res});
         })
   }
@@ -65,6 +73,16 @@ class ChangeInputData extends React.Component {
     }
 
   }
+  
+  onNumChange(valueNumber, valueString, input){
+    console.log(valueNumber, valueString, input);
+    if (input.id == 'distance'){
+      this.distance_factor = valueNumber;
+    }
+    else{
+      this.cost_factor = valueNumber;
+    }
+  }
 
   //save changes to server
   onButtonClick(){
@@ -74,7 +92,7 @@ class ChangeInputData extends React.Component {
       headers: {
           'Content-type': 'application/json; charset=UTF-8'
       },
-      body: JSON.stringify({newCnc: this.concentrations})
+      body: JSON.stringify({newCnc: this.concentrations, newFactors: {cost : this.cost_factor, distance: this.distance_factor}})
     })
       .then(response => response.json())
       .then((result)=>{
@@ -131,6 +149,8 @@ class ChangeInputData extends React.Component {
         });
         return (
         <div>
+            
+            <div className="flexHorizontal">
             <Button variant="primary"
                             onClick={this.onButtonClick}
                             style={{
@@ -138,6 +158,23 @@ class ChangeInputData extends React.Component {
                             }}>
                             Save
             </Button>
+            <div style={{
+              display:'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+            <div className="flexHorizontal">
+            <label>Distance factor</label>
+            <NumericInput id="distance" min={0} max={100} value={this.state.data['distance_factor']} 
+              step={0.1} precision={1} onChange={this.onNumChange}/>
+            </div>
+            <div className="flexHorizontal">
+            <label>Cost factor</label>
+            <NumericInput id="cost" min={0} max={100} value={this.state.data['cost_factor']}
+              step={0.1} precision={1} onChange={this.onNumChange}/>
+            </div>
+            </div>
+            </div>  
             <BootstrapTable
               bootstrap4={true}
               data={products} 

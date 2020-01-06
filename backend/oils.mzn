@@ -14,7 +14,7 @@ array [VOCs] of float: concentrations_target;
 array [VOCs] of float: threshold;
 %indicates how important a certain VOC is in relation to its sensibility to the threshold
 %the higher the sensitivity, the more the distance should be minimized  
-array [VOCs] of float: sensitivity;
+%array [VOCs] of float: sensitivity;
 
 array [Oils] of float: costs ;
 float :costs_target ;
@@ -26,22 +26,23 @@ array [VOCs] of var float: concentrations_comp = [
   sum(o in Oils) (qty[o] * concentrations[v, o]) | v in VOCs
 ];
 
+float :cost_factor ;
+float :distance_factor ;
 % the sum of the quantities must be 1.
 constraint sum(qty) = 1.0;
 %temporary constraint
 constraint sum(oil in Oils) (qty[oil] * costs[oil]) <= MAX_COST ;
 % Manhattan distance between x and y (normalized).
 function var float:
-dist(array[int] of var float: x, array[int] of var float: y, array[int] of var float: th, array[int] of var float: s) = let {
+dist(array[int] of var float: x, array[int] of var float: y, array[int] of var float: th) = let {
   constraint assert(length(x) = length(y), "array lengths differ", true);
-  constraint assert(length(y) = length(s), "array lengths differ", true);
-  constraint assert(length(s) = length(th), "array lengths differ", true);
-} in sum([abs(x[i] - y[i]) * (s[i] / th[i]) | i in index_set(x)]);
+  constraint assert(length(y) = length(th), "array lengths differ", true);
+} in sum([abs(x[i] - y[i]) * (1 / th[i]) | i in index_set(x)]);
 
-var float: obj = dist(concentrations_comp, concentrations_target, threshold, sensitivity);
-
+var float: obj = dist(concentrations_comp, concentrations_target, threshold);
+var float: total_cost = sum (oil in Oils) (qty[oil]*costs[oil]) ;
 % Minimising the distance from the concentrations of the target oil.
-solve minimize obj;
+solve minimize distance_factor*obj + cost_factor*total_cost ;
 
 %output[(show_float(0, 2, qty[oil] * 100.0)) ++ "% " | oil in Oils]; 
 output
@@ -60,9 +61,15 @@ output
   ["\n----------\n"]++
   ["Target difference:\n"] ++
   [show("\(voc): \(show_float(0, 4, concentrations_comp[voc] - concentrations_target[voc]))") ++ "\n" | voc in VOCs] ++
+  ["\n----------\n"]++
+  ["Cost factor:\n"] ++
+  [show_float(1,2,cost_factor) ++ "\n"] ++
+  ["\n----------\n"]++
+  ["Distance factor:\n"] ++
+  [show_float(1,2,distance_factor) ++ "\n"] ++
   ["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
   [show_float(1, 2, obj) ++ "\n"] ++
   ["\n----------\n"] ++
   ["Total price:\n"] ++
-  [show_float(1,2, sum (oil in Oils) (qty[oil]*costs[oil]))] 
+  [show_float(1,2, total_cost)] 

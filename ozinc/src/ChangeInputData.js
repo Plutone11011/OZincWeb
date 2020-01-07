@@ -31,6 +31,7 @@ class ChangeInputData extends React.Component {
     //numeric factors
     this.cost_factor = 0 ;
     this.distance_factor = 0 ;
+    this.max_cost = 0 ;
 
     this.onTableChange = this.onTableChange.bind(this);
     this.onButtonClick = this.onButtonClick.bind(this);
@@ -168,13 +169,13 @@ class ChangeInputData extends React.Component {
             </Button>
             
             <label style={{margin:"10px"}}>Importanza fattore distanza</label>
-            <NumericInput style={{margin:"10px"}} id="distance" min={0} max={100} value={this.state.data['distance_factor']} 
+            <NumericInput style={{margin:"10px"}} id="distance" min={0} max={100} value={this.distance_factor} 
               step={0.1} precision={1} onChange={this.onNumChange}/>
             <label style={{margin:"10px"}}>Importanza fattore costo</label>
-            <NumericInput  style={{margin:"10px"}} id="cost" min={0} max={100} value={this.state.data['cost_factor']}
+            <NumericInput  style={{margin:"10px"}} id="cost" min={0} max={100} value={this.cost_factor}
               step={0.1} precision={1} onChange={this.onNumChange}/>
             <label style={{margin:"10px"}}>Costo massimo ammissibile</label>
-            <NumericInput style={{margin:"10px"}} id="max_cost" min={0} value={this.state.data['max_cost']}
+            <NumericInput style={{margin:"10px"}} id="max_cost" min={0} value={this.max_cost}
               step={0.1} precision={1} onChange={this.onNumChange}/> 
             <BootstrapTable
               bootstrap4={true}

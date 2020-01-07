@@ -5,7 +5,7 @@ const RedisHandler = require('../RedisHandler');
 const utils = require('../utils');
 
 router.get('/',(req, res)=>{
-    res.json('Data page');
+    res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'));
 });
 
 function getOilorVOCsNames(data, name){

@@ -171,6 +171,7 @@ function redisTransaction(req, res){
                 }
 
                 if (!results){
+                    console.log('recursion..');
                     redisTransaction(req, res);
                 }
                 else {

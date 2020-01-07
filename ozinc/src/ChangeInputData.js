@@ -5,7 +5,11 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import cellEditFactory, {Type} from 'react-bootstrap-table2-editor';
 import Button from 'react-bootstrap/Button';
-
+import NumericInput from 'react-numeric-input';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import './ChangeInputData.css';
 
 class ChangeInputData extends React.Component {
   constructor(props) {
@@ -24,8 +28,13 @@ class ChangeInputData extends React.Component {
     this.columnsDataField = range(11).map( n => `oil${n}`);
     this.columnsDataField.push('soglie');
 
+    //numeric factors
+    this.cost_factor = 0 ;
+    this.distance_factor = 0 ;
+
     this.onTableChange = this.onTableChange.bind(this);
     this.onButtonClick = this.onButtonClick.bind(this);
+    this.onNumChange = this.onNumChange.bind(this);
   }
 
   componentDidMount(){
@@ -47,6 +56,9 @@ class ChangeInputData extends React.Component {
             });
             this.columns = res['oils'];
             this.columns.push('Soglie');
+            this.cost_factor = res['cost_factor'];
+            this.distance_factor = res['distance_factor'];
+            this.max_cost = res['max_cost'];
             this.setState({data: res});
         })
   }
@@ -65,6 +77,19 @@ class ChangeInputData extends React.Component {
     }
 
   }
+  
+  onNumChange(valueNumber, valueString, input){
+    console.log(valueNumber, valueString, input);
+    if (input.id == 'distance'){
+      this.distance_factor = valueNumber;
+    }
+    else if (input.id == 'cost'){
+      this.cost_factor = valueNumber;
+    }
+    else {
+      this.max_cost = valueNumber;
+    }
+  }
 
   //save changes to server
   onButtonClick(){
@@ -74,7 +99,9 @@ class ChangeInputData extends React.Component {
       headers: {
           'Content-type': 'application/json; charset=UTF-8'
       },
-      body: JSON.stringify({newCnc: this.concentrations})
+      body: JSON.stringify({newCnc: this.concentrations, 
+        newFactors: {cost : this.cost_factor, distance: this.distance_factor},
+         maxCost: this.max_cost})
     })
       .then(response => response.json())
       .then((result)=>{
@@ -131,6 +158,7 @@ class ChangeInputData extends React.Component {
         });
         return (
         <div>
+            
             <Button variant="primary"
                             onClick={this.onButtonClick}
                             style={{
@@ -138,6 +166,16 @@ class ChangeInputData extends React.Component {
                             }}>
                             Save
             </Button>
+            
+            <label style={{margin:"10px"}}>Importanza fattore distanza</label>
+            <NumericInput style={{margin:"10px"}} id="distance" min={0} max={100} value={this.state.data['distance_factor']} 
+              step={0.1} precision={1} onChange={this.onNumChange}/>
+            <label style={{margin:"10px"}}>Importanza fattore costo</label>
+            <NumericInput  style={{margin:"10px"}} id="cost" min={0} max={100} value={this.state.data['cost_factor']}
+              step={0.1} precision={1} onChange={this.onNumChange}/>
+            <label style={{margin:"10px"}}>Costo massimo ammissibile</label>
+            <NumericInput style={{margin:"10px"}} id="max_cost" min={0} value={this.state.data['max_cost']}
+              step={0.1} precision={1} onChange={this.onNumChange}/> 
             <BootstrapTable
               bootstrap4={true}
               data={products} 

@@ -15,7 +15,7 @@ import {
 import NavItem from 'react-bootstrap/NavItem';
 import NavLink from 'react-bootstrap/NavLink';
 import DropdownButton from 'react-bootstrap/DropdownButton';
-import Dropdown from 'react-bootstrap/Dropdown'
+import Dropdown from 'react-bootstrap/Dropdown';
 //Custom components
 import OilsTable from './Table';
 import ChangeInputData from './ChangeInputData';

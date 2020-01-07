@@ -69,7 +69,7 @@ output
   [show_float(1,2,distance_factor) ++ "\n"] ++
   ["\n----------\n"] ++
   ["Distance from target:\n"] ++ 
-  [show_float(1, 2, obj) ++ "\n"] ++
+  [show_float(1, 2, sum (voc in VOCs) (abs(concentrations_comp[voc] - concentrations_target[voc]))) ++ "\n"] ++
   ["\n----------\n"] ++
   ["Total price:\n"] ++
   [show_float(1,2, total_cost)] 

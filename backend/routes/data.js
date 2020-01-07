@@ -128,6 +128,12 @@ function getScalarizationFactors(data, model_variable_name){
     return data.slice(data.indexOf('=',model_variable_index)+1, data.indexOf(';', model_variable_index)).trim();
 }
 
+function getMaxCost(data){
+    let model_variable_index = data.indexOf('MAX_COST');
+
+    return data.slice(data.indexOf('=',model_variable_index)+1, data.indexOf(';', model_variable_index)).trim();
+}
+
 router.get('/concentrations',(req,res)=>{
 
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
@@ -142,6 +148,7 @@ router.get('/concentrations',(req,res)=>{
         result['thresholds'] = getThresholds(data);
         result['distance_factor'] = getScalarizationFactors(data, 'distance_factor');
         result['cost_factor'] = getScalarizationFactors(data, 'cost_factor');
+        result['max_cost'] = getMaxCost(data);
         //console.log(result);
         res.json(result);
     });
@@ -228,9 +235,9 @@ function changeFactors(data_file_content, model_variable_name, factor){
     const equal_index = data_file_content.indexOf('=',model_variable_index);
     
     const comma_index = data_file_content.indexOf(';',equal_index);
-    console.log(data_file_content.slice(equal_index+1, comma_index));
     //perform replace on sliced string because 
     let sliced_string = data_file_content.slice(equal_index+1, comma_index);
+    console.log(sliced_string);
     sliced_string = sliced_string.replace(sliced_string, factor);
     data_file_content = data_file_content.slice(0,equal_index+1) + sliced_string + data_file_content.slice(comma_index);
     
@@ -239,8 +246,6 @@ function changeFactors(data_file_content, model_variable_name, factor){
 
 function redisTransaction(req, res){
     RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
-        console.log(req.body.newFactors);
-        console.log(items);
         
         let concentration_target_array = [], thresholds = [] ;
 
@@ -261,6 +266,7 @@ function redisTransaction(req, res){
         data_file_content = changeThresholds(data_file_content, thresholds);
         data_file_content = changeFactors(data_file_content,'distance_factor', req.body.newFactors.distance);
         data_file_content = changeFactors(data_file_content,'cost_factor', req.body.newFactors.cost);
+        data_file_content = changeFactors(data_file_content,'MAX_COST', req.body.maxCost);
         //console.log(data_file_content);
         //now costs
         let lines = data_file_content.split(/\r?\n/);

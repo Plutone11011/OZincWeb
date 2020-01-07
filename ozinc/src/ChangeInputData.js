@@ -6,6 +6,9 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import cellEditFactory, {Type} from 'react-bootstrap-table2-editor';
 import Button from 'react-bootstrap/Button';
 import NumericInput from 'react-numeric-input';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import './ChangeInputData.css';
 
 class ChangeInputData extends React.Component {
@@ -55,6 +58,7 @@ class ChangeInputData extends React.Component {
             this.columns.push('Soglie');
             this.cost_factor = res['cost_factor'];
             this.distance_factor = res['distance_factor'];
+            this.max_cost = res['max_cost'];
             this.setState({data: res});
         })
   }
@@ -79,8 +83,11 @@ class ChangeInputData extends React.Component {
     if (input.id == 'distance'){
       this.distance_factor = valueNumber;
     }
-    else{
+    else if (input.id == 'cost'){
       this.cost_factor = valueNumber;
+    }
+    else {
+      this.max_cost = valueNumber;
     }
   }
 
@@ -92,7 +99,9 @@ class ChangeInputData extends React.Component {
       headers: {
           'Content-type': 'application/json; charset=UTF-8'
       },
-      body: JSON.stringify({newCnc: this.concentrations, newFactors: {cost : this.cost_factor, distance: this.distance_factor}})
+      body: JSON.stringify({newCnc: this.concentrations, 
+        newFactors: {cost : this.cost_factor, distance: this.distance_factor},
+         maxCost: this.max_cost})
     })
       .then(response => response.json())
       .then((result)=>{
@@ -150,7 +159,6 @@ class ChangeInputData extends React.Component {
         return (
         <div>
             
-            <div className="flexHorizontal">
             <Button variant="primary"
                             onClick={this.onButtonClick}
                             style={{
@@ -158,23 +166,16 @@ class ChangeInputData extends React.Component {
                             }}>
                             Save
             </Button>
-            <div style={{
-              display:'flex',
-              flexDirection: 'column',
-              alignItems: 'center'
-            }}>
-            <div className="flexHorizontal">
-            <label>Distance factor</label>
-            <NumericInput id="distance" min={0} max={100} value={this.state.data['distance_factor']} 
+            
+            <label style={{margin:"10px"}}>Importanza fattore distanza</label>
+            <NumericInput style={{margin:"10px"}} id="distance" min={0} max={100} value={this.state.data['distance_factor']} 
               step={0.1} precision={1} onChange={this.onNumChange}/>
-            </div>
-            <div className="flexHorizontal">
-            <label>Cost factor</label>
-            <NumericInput id="cost" min={0} max={100} value={this.state.data['cost_factor']}
+            <label style={{margin:"10px"}}>Importanza fattore costo</label>
+            <NumericInput  style={{margin:"10px"}} id="cost" min={0} max={100} value={this.state.data['cost_factor']}
               step={0.1} precision={1} onChange={this.onNumChange}/>
-            </div>
-            </div>
-            </div>  
+            <label style={{margin:"10px"}}>Costo massimo ammissibile</label>
+            <NumericInput style={{margin:"10px"}} id="max_cost" min={0} value={this.state.data['max_cost']}
+              step={0.1} precision={1} onChange={this.onNumChange}/> 
             <BootstrapTable
               bootstrap4={true}
               data={products} 

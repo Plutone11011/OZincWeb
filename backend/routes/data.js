@@ -1,7 +1,6 @@
 var router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const RedisHandler = require('../RedisHandler');
 const utils = require('../utils');
 
 router.get('/',(req, res)=>{
@@ -136,19 +135,19 @@ function getMaxCost(data){
 
 router.get('/concentrations',(req,res)=>{
 
-    RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
+    fs.readFile(path.join(__dirname,'../oils-data.dzn'),'utf-8',(error, data)=>{
 
-        let data = utils.recombineRedisString(items);
+        let data_file_content = data ;
         let result = {};
 
-        result['costs'] = getCosts(data);
-        result['oils'] = getOilorVOCsNames(data, 'Oils');
-        result['voc'] = getOilorVOCsNames(data, 'VOCs');
-        result['concentrations'] = getConcentrations(data);
-        result['thresholds'] = getThresholds(data);
-        result['distance_factor'] = getScalarizationFactors(data, 'distance_factor');
-        result['cost_factor'] = getScalarizationFactors(data, 'cost_factor');
-        result['max_cost'] = getMaxCost(data);
+        result['costs'] = getCosts(data_file_content);
+        result['oils'] = getOilorVOCsNames(data_file_content, 'Oils');
+        result['voc'] = getOilorVOCsNames(data_file_content, 'VOCs');
+        result['concentrations'] = getConcentrations(data_file_content);
+        result['thresholds'] = getThresholds(data_file_content);
+        result['distance_factor'] = getScalarizationFactors(data_file_content, 'distance_factor');
+        result['cost_factor'] = getScalarizationFactors(data_file_content, 'cost_factor');
+        result['max_cost'] = getMaxCost(data_file_content);
         //console.log(result);
         res.json(result);
     });
@@ -237,19 +236,20 @@ function changeFactors(data_file_content, model_variable_name, factor){
     const comma_index = data_file_content.indexOf(';',equal_index);
     //perform replace on sliced string because 
     let sliced_string = data_file_content.slice(equal_index+1, comma_index);
-    console.log(sliced_string);
     sliced_string = sliced_string.replace(sliced_string, factor);
     data_file_content = data_file_content.slice(0,equal_index+1) + sliced_string + data_file_content.slice(comma_index);
     
     return data_file_content ;
 }
 
-function redisTransaction(req, res){
-    RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
+
+router.put('/changeData',(req,res,next)=>{
+    
+    fs.readFile(path.join(__dirname,'../oils-data.dzn'),'utf-8',(error, data)=>{
         
         let concentration_target_array = [], thresholds = [] ;
 
-        let data_file_content = utils.recombineRedisString(items);
+        let data_file_content = data;
         
         let cost_array = req.body.newCnc.shift();
         cost_array.splice(-1,1); //eliminate last void character
@@ -269,38 +269,14 @@ function redisTransaction(req, res){
         data_file_content = changeFactors(data_file_content,'MAX_COST', req.body.maxCost);
         //console.log(data_file_content);
         //now costs
-        let lines = data_file_content.split(/\r?\n/);
-            
-        RedisHandler.getRedisInstance().multi()
-            .del(RedisHandler.getDataKey())
-            .rpush(RedisHandler.getDataKey(), ...lines)
-            .exec((e, results)=>{
-                
-                if (e){
-                    throw e ;
-                }
-                if (!results){
-                    console.log('recursion..');
-                    redisTransaction(req, res);
-                }
-                else {
-                    res.sendStatus(200);
-                }
-                
-            });        
-    });    
-
-}
-
-router.put('/changeData',(req,res,next)=>{
-    RedisHandler.getRedisInstance().watch(RedisHandler.getDataKey(), (err)=>{
-        if (err) {
-            throw err ;
-        }
-        redisTransaction(req, res);
+        
+        fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
+            if (err){
+                throw err ;
+            }
+            res.sendStatus(200);
+        });
     });
-
-
 });
 
 module.exports = router ;

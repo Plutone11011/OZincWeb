@@ -15,14 +15,14 @@ function findArrayIndexes(character_start, character_end, model_variable_index, 
 
     return [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array];
 }
-//creates a single string out of the array in redis
+/*creates a single string out of the array in redis
 function recombineRedisString(items){
     let data = '';
     for (let item of items){
         data += `${item}\n`;
     }
     return data ;
-}
+}*/
 //utility function to format a matrix-like string for minizinc, with |
 function fillWithSeparators(matrix, column_length){
 
@@ -45,6 +45,5 @@ function fillWithSeparators(matrix, column_length){
 module.exports = {
     findArrayIndexes: findArrayIndexes,
     findVariableModelIndexes: findVariableModelIndexes,
-    recombineRedisString: recombineRedisString,
     fillWithSeparators: fillWithSeparators
 }

@@ -6,10 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const basicAuth = require('express-basic-auth');
 //development
-const dotenv = require('dotenv').config();
-//custom modules
-var RedisHandler = require('./RedisHandler');
-
+const dotenv = require('dotenv');
+dotenv.config();
 const app = express();
 
 
@@ -34,11 +32,11 @@ app.use('/data',require(`${__dirname}/routes/data`));
 const port = process.env.PORT || 8000;  
 // launch our backend into a port
 app.listen(port, function(){
+    console.log(process.env);
     console.log(`Listening on port ${process.env.PORT}`);
     let data = fs.readFileSync(`${__dirname}/oils-data.dzn`,'utf-8');
     let model = fs.readFileSync(`${__dirname}/oils.mzn`,'utf-8');
 
-    console.log(process.env.NODE_ENV);
-    RedisHandler.populateRedis(RedisHandler.getModelKey(),model);
-    RedisHandler.populateRedis(RedisHandler.getDataKey(),data);
+    //RedisHandler.populateRedis(RedisHandler.getModelKey(),model);
+    //RedisHandler.populateRedis(RedisHandler.getDataKey(),data);
 });

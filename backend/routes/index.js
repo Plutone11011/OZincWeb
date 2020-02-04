@@ -4,7 +4,6 @@ const fs = require('fs');
 const fsPromises = fs.promises ;
 const path = require('path');
 //local modules
-const RedisHandler = require('../RedisHandler');
 const MiniZnResults = require('../ResultParser');
 const utils = require('../utils');
 
@@ -17,11 +16,20 @@ router.get('/' ,(req, res)=>{
 
 
 function launch_minizinc(response){
+<<<<<<< HEAD
     fsPromises.chmod(path.join(process.env.HOME,'/tmp/oils.mzn'),0o666)
         .then(()=>{
             console.log("Access to all");
             exec(`${path.join(process.env.HOME,`/MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(process.env.HOME,'/tmp/oils.mzn')} ${path.join(process.env.HOME,'/tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
             //console.log(stdout);
+=======
+    fsPromises.chmod(path.join(__dirname,'../oils.mzn'),0o666)
+    .then(()=>{
+        const fullCommand = `${path.join(__dirname,`../../MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(__dirname,'../oils.mzn')} ${path.join(__dirname,'../oils-data.dzn')}`;
+        console.log(fullCommand);
+        exec(fullCommand, (err, stdout, stderr)=>{
+        //console.log(stdout);
+>>>>>>> dev_2
             if (!stderr){
                 if (stdout.includes('UNSATISFIABLE') ){
                     response.json("No results");
@@ -37,6 +45,7 @@ function launch_minizinc(response){
                 console.log("Error"+stderr);
                 //send back standard response?
             }
+<<<<<<< HEAD
             });
         })
         .catch(()=>{
@@ -55,19 +64,15 @@ function createTempFileWithRedisData(key, filename, next){
                 throw err ;
             }
             next();
+=======
+>>>>>>> dev_2
         });
-    });
-
+    })
+    .catch((e)=>{
+        console.log("Couldn't change permissions because :" + e);
+    })
+    
 }
-
-//first rewrites temp model, then temp data, then launches minizinc
-router.get('/getMinizincResults',(req, res, next)=>{
-    createTempFileWithRedisData(RedisHandler.getModelKey(),'oils.mzn',next);
-});
-
-router.get('/getMinizincResults',(req, res,next)=>{
-    createTempFileWithRedisData(RedisHandler.getDataKey(), 'oils-data.dzn', next);
-});
 
 router.get('/getMinizincResults',(req, res)=>{
     try {
@@ -143,12 +148,12 @@ function updateMatrix(model_variable_name, data_file_content, index_to_swap, num
     return data_file_content;
 }
 
-//reads from redis, updates data and uses a multi transaction
-//to delete and recreate the key with the updated data
-//the watch (optimistic lock) allows to retry in case there's race condition
-function redisTransaction(req, res){
-    RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
-        let data_file_content = utils.recombineRedisString(items);
+
+
+router.put('/changeTarget', (req, res, next)=>{
+    
+    fs.readFile(path.join(__dirname,'../oils-data.dzn'),'utf-8',(error, data)=>{
+        let data_file_content = data;
         let index_to_swap, numberOfNonTarget ;
         //need to put _ between spaces as is in the data file
         let previous_target_underscored = req.body.previousTarget.replace(/\s/g,'_') ;
@@ -159,39 +164,15 @@ function redisTransaction(req, res){
         data_file_content = updateName(data_file_content, previous_target_underscored, next_target_underscored);
         data_file_content = updateMatrix("concentrations", data_file_content, index_to_swap, numberOfNonTarget);
 
-        let lines = data_file_content.split(/\r?\n/);
         
-        RedisHandler.getRedisInstance().multi()
-            .del(RedisHandler.getDataKey())
-            .rpush(RedisHandler.getDataKey(), ...lines)
-            .exec((e, results)=>{
-                
-                if (e){
-                    throw e ;
-                }
-
-                if (!results){
-                    console.log('recursion..');
-                    redisTransaction(req, res);
-                }
-                else {
-                    res.sendStatus(200);
-                }
-
-                
-            });
         
+        fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
+            if (err){
+                throw err ;
+            }
+            res.sendStatus(200);
+        });
     
-    });
-}
-
-router.put('/changeTarget', (req, res, next)=>{
-    RedisHandler.getRedisInstance().watch(RedisHandler.getDataKey(), (err)=>{
-        if (err) {
-            throw err ;
-        }
-
-        redisTransaction(req, res);
     });
 });
 

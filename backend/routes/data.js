@@ -1,7 +1,6 @@
 var router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const RedisHandler = require('../RedisHandler');
 const utils = require('../utils');
 
 router.get('/',(req, res)=>{
@@ -104,8 +103,8 @@ function getCosts(data){
 
 }
 
-function getThresholds(data){
-    const model_variable_name = 'threshold';
+function getArray(data, name){
+    const model_variable_name = name ;
     let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index,
         thresholds ;
     [model_variable_index, model_variable_target_index] = utils
@@ -119,7 +118,7 @@ function getThresholds(data){
     return thresholds ; 
 }
 
-function getScalarizationFactors(data, model_variable_name){
+function getSingleVariable(data, model_variable_name){
 
     let model_variable_index;
     model_variable_index = data.indexOf(model_variable_name);
@@ -128,27 +127,24 @@ function getScalarizationFactors(data, model_variable_name){
     return data.slice(data.indexOf('=',model_variable_index)+1, data.indexOf(';', model_variable_index)).trim();
 }
 
-function getMaxCost(data){
-    let model_variable_index = data.indexOf('MAX_COST');
-
-    return data.slice(data.indexOf('=',model_variable_index)+1, data.indexOf(';', model_variable_index)).trim();
-}
 
 router.get('/concentrations',(req,res)=>{
 
-    RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
+    fs.readFile(path.join(__dirname,'../oils-data.dzn'),'utf-8',(error, data)=>{
 
-        let data = utils.recombineRedisString(items);
+        let data_file_content = data ;
         let result = {};
 
-        result['costs'] = getCosts(data);
-        result['oils'] = getOilorVOCsNames(data, 'Oils');
-        result['voc'] = getOilorVOCsNames(data, 'VOCs');
-        result['concentrations'] = getConcentrations(data);
-        result['thresholds'] = getThresholds(data);
-        result['distance_factor'] = getScalarizationFactors(data, 'distance_factor');
-        result['cost_factor'] = getScalarizationFactors(data, 'cost_factor');
-        result['max_cost'] = getMaxCost(data);
+        result['costs'] = getCosts(data_file_content);
+        result['oils'] = getOilorVOCsNames(data_file_content, 'Oils');
+        result['voc'] = getOilorVOCsNames(data_file_content, 'VOCs');
+        result['concentrations'] = getConcentrations(data_file_content);
+        result['thresholds'] = getArray(data_file_content, 'thresholds');
+        result['sensitivity'] = getArray(data_file_content, 'sensitivity');
+        result['distance_factor'] = getSingleVariable(data_file_content, 'distance_factor');
+        result['cost_factor'] = getSingleVariable(data_file_content, 'cost_factor');
+        result['max_cost'] = getSingleVariable(data_file_content,'MAX_COST');
+        result['max_distance'] = getSingleVariable(data_file_content, 'MAX_DIST');
         //console.log(result);
         res.json(result);
     });
@@ -212,8 +208,8 @@ function changeCosts(data_file_content, cost_array){
     return data_file_content;
 }
 
-function changeThresholds(data_file_content, thresholds){
-    const model_variable_name = 'threshold';
+function changeArray(data_file_content, arr, name){
+    const model_variable_name = name;
     let model_variable_index, begin_variable_array, end_variable_array, model_variable_target_index;
     [model_variable_index, model_variable_target_index] = utils
         .findVariableModelIndexes(model_variable_name, data_file_content);
@@ -223,7 +219,7 @@ function changeThresholds(data_file_content, thresholds){
     
     //ignore targets, will yield -1
     data_file_content = data_file_content.replace(data_file_content.slice(begin_variable_array,end_variable_array+1)
-        , `[${thresholds.join()}]`);
+        , `[${arr.join()}]`);
     return data_file_content;
 }
 
@@ -237,24 +233,27 @@ function changeFactors(data_file_content, model_variable_name, factor){
     const comma_index = data_file_content.indexOf(';',equal_index);
     //perform replace on sliced string because 
     let sliced_string = data_file_content.slice(equal_index+1, comma_index);
-    console.log(sliced_string);
     sliced_string = sliced_string.replace(sliced_string, factor);
     data_file_content = data_file_content.slice(0,equal_index+1) + sliced_string + data_file_content.slice(comma_index);
     
     return data_file_content ;
 }
 
-function redisTransaction(req, res){
-    RedisHandler.getRedisInstance().lrange(RedisHandler.getDataKey(),0,-1,(error, items)=>{
-        
-        let concentration_target_array = [], thresholds = [] ;
 
-        let data_file_content = utils.recombineRedisString(items);
+router.put('/changeData',(req,res,next)=>{
+    
+    fs.readFile(path.join(__dirname,'../oils-data.dzn'),'utf-8',(error, data)=>{
+        
+        let concentration_target_array = [], thresholds = [], sensitivity = [] ;
+
+        let data_file_content = data;
         
         let cost_array = req.body.newCnc.shift();
-        cost_array.splice(-1,1); //eliminate last void character
-        //removes last element of each subarray to form target (except first array of costs)
+        cost_array.splice(-1,1); //eliminate last two useless elements
+        cost_array.splice(-1,1);
+        //removes last elements to form, in order, sensitivity, thresholds and target
         req.body.newCnc.forEach((val, index)=>{
+            sensitivity.push(parseFloat(val.splice(-1,1).join()));
             thresholds.push(parseFloat(val.splice(-1,1).join()));
             concentration_target_array.push(parseFloat(val.splice(-1,1).join()));
         });
@@ -263,44 +262,22 @@ function redisTransaction(req, res){
         
         data_file_content = changeConcentrations(data_file_content, concentration_matrix_string, concentration_target_string);
         data_file_content = changeCosts(data_file_content, cost_array);
-        data_file_content = changeThresholds(data_file_content, thresholds);
+        data_file_content = changeArray(data_file_content, thresholds, 'thresholds');
+        data_file_content = changeArray(data_file_content, sensitivity, 'sensitivity');
         data_file_content = changeFactors(data_file_content,'distance_factor', req.body.newFactors.distance);
         data_file_content = changeFactors(data_file_content,'cost_factor', req.body.newFactors.cost);
         data_file_content = changeFactors(data_file_content,'MAX_COST', req.body.maxCost);
+        data_file_content = changeFactors(data_file_content, 'MAX_DIST', req.body.maxDist);
         //console.log(data_file_content);
         //now costs
-        let lines = data_file_content.split(/\r?\n/);
-            
-        RedisHandler.getRedisInstance().multi()
-            .del(RedisHandler.getDataKey())
-            .rpush(RedisHandler.getDataKey(), ...lines)
-            .exec((e, results)=>{
-                
-                if (e){
-                    throw e ;
-                }
-                if (!results){
-                    console.log('recursion..');
-                    redisTransaction(req, res);
-                }
-                else {
-                    res.sendStatus(200);
-                }
-                
-            });        
-    });    
-
-}
-
-router.put('/changeData',(req,res,next)=>{
-    RedisHandler.getRedisInstance().watch(RedisHandler.getDataKey(), (err)=>{
-        if (err) {
-            throw err ;
-        }
-        redisTransaction(req, res);
+        
+        fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
+            if (err){
+                throw err ;
+            }
+            res.sendStatus(200);
+        });
     });
-
-
 });
 
 module.exports = router ;

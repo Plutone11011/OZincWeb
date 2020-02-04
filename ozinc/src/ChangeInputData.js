@@ -3,11 +3,10 @@ import React from "react";
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import cellEditFactory, {Type} from 'react-bootstrap-table2-editor';
+import cellEditFactory from 'react-bootstrap-table2-editor';
 import Button from 'react-bootstrap/Button';
 import NumericInput from 'react-numeric-input';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
+import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col';
 import './ChangeInputData.css';
 
@@ -27,11 +26,13 @@ class ChangeInputData extends React.Component {
     //array for dataField of columns 
     this.columnsDataField = range(11).map( n => `oil${n}`);
     this.columnsDataField.push('soglie');
+    this.columnsDataField.push('sensibiltà');
 
     //numeric factors
     this.cost_factor = 0 ;
     this.distance_factor = 0 ;
     this.max_cost = 0 ;
+    this.max_distance = 0;
 
     this.onTableChange = this.onTableChange.bind(this);
     this.onButtonClick = this.onButtonClick.bind(this);
@@ -50,22 +51,26 @@ class ChangeInputData extends React.Component {
             this.concentrations.forEach((arr, index)=>{
               if (index > 0){
                 arr.push(res['thresholds'][index - 1]);
+                arr.push(res['sensitivity'][index - 1]);
               }
               else {
+                arr.push('/');
                 arr.push('/');
               }
             });
             this.columns = res['oils'];
             this.columns.push('Soglie');
+            this.columns.push('Sensibilità');
             this.cost_factor = res['cost_factor'];
             this.distance_factor = res['distance_factor'];
             this.max_cost = res['max_cost'];
+            this.max_distance = res['max_distance'];
             this.setState({data: res});
         })
   }
 
   onTableChange(type, newState){ 
-    if (type == 'cellEdit'){
+    if (type === 'cellEdit'){
       let rowIndex = this.rows.indexOf(newState.cellEdit.rowId);
       let columnIndex = this.columnsDataField.indexOf(newState.cellEdit.dataField);
       this.concentrations[rowIndex][columnIndex] = parseFloat(newState.cellEdit.newValue);
@@ -81,14 +86,17 @@ class ChangeInputData extends React.Component {
   
   onNumChange(valueNumber, valueString, input){
     console.log(valueNumber, valueString, input);
-    if (input.id == 'distance'){
+    if (input.id === 'distance'){
       this.distance_factor = valueNumber;
     }
-    else if (input.id == 'cost'){
+    else if (input.id === 'cost'){
       this.cost_factor = valueNumber;
     }
-    else {
+    else if (input.id === 'max_cost'){
       this.max_cost = valueNumber;
+    }
+    else {
+      this.max_distance = valueNumber;
     }
   }
 
@@ -102,7 +110,7 @@ class ChangeInputData extends React.Component {
       },
       body: JSON.stringify({newCnc: this.concentrations, 
         newFactors: {cost : this.cost_factor, distance: this.distance_factor},
-         maxCost: this.max_cost})
+         maxCost: this.max_cost, maxDist: this.max_distance})
     })
       .then(response => response.json())
       .then((result)=>{
@@ -154,12 +162,13 @@ class ChangeInputData extends React.Component {
                 [this.columnsDataField[8]]: conc[8],
                 [this.columnsDataField[9]]: conc[9],
                 [this.columnsDataField[10]]: conc[10],
-                [this.columnsDataField[11]]: conc[11] //soglie
+                [this.columnsDataField[11]]: conc[11], //soglie
+                [this.columnsDataField[12]]: conc[12] 
             });
         });
         return (
         <div>
-            
+          <Form>
             <Button variant="primary"
                             onClick={this.onButtonClick}
                             style={{
@@ -167,16 +176,31 @@ class ChangeInputData extends React.Component {
                             }}>
                             Save
             </Button>
-            
-            <label style={{margin:"10px"}}>Importanza fattore distanza</label>
-            <NumericInput style={{margin:"10px"}} id="distance" min={0} max={100} value={this.distance_factor} 
-              step={0.1} precision={1} onChange={this.onNumChange}/>
-            <label style={{margin:"10px"}}>Importanza fattore costo</label>
-            <NumericInput  style={{margin:"10px"}} id="cost" min={0} max={100} value={this.cost_factor}
-              step={0.1} precision={1} onChange={this.onNumChange}/>
-            <label style={{margin:"10px"}}>Costo massimo ammissibile</label>
-            <NumericInput style={{margin:"10px"}} id="max_cost" min={0} value={this.max_cost}
-              step={0.1} precision={1} onChange={this.onNumChange}/> 
+            <Form.Row>
+              <Form.Group as={Col}>
+                <Form.Label className={'form'}>Importanza fattore distanza</Form.Label>
+                <NumericInput id="distance" min={0} max={100} value={this.distance_factor} 
+                  step={0.1} precision={1} onChange={this.onNumChange}/>
+              </Form.Group>
+              <Form.Group as={Col}>
+                <Form.Label className={'form'}>Importanza fattore costo</Form.Label>
+                <NumericInput id="cost" min={0} max={100} value={this.cost_factor}
+                step={0.1} precision={1} onChange={this.onNumChange}/>
+              </Form.Group>
+            </Form.Row>
+            <Form.Row>
+              <Form.Group as={Col}>
+                <Form.Label className={'form'}>Costo massimo ammissibile</Form.Label>
+                <NumericInput id="max_cost" min={0} value={this.max_cost}
+                step={0.1} precision={1} onChange={this.onNumChange}/>
+              </Form.Group>
+              <Form.Group as={Col}>
+                <Form.Label className={'form'}>Distanza massima</Form.Label>
+                <NumericInput id="max_dist" min={0} value={this.max_distance}
+                step={0.1} precision={1} onChange={this.onNumChange}/>
+              </Form.Group>
+            </Form.Row>
+          </Form>
             <BootstrapTable
               bootstrap4={true}
               data={products} 

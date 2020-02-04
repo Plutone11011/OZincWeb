@@ -1,7 +1,6 @@
 var router = require('express').Router();
 const { exec } = require('child_process');
 const fs = require('fs');
-const fsPromises = fs.promises ;
 const path = require('path');
 //local modules
 const MiniZnResults = require('../ResultParser');
@@ -16,8 +15,12 @@ router.get('/' ,(req, res)=>{
 
 
 function launch_minizinc(response){
-    fsPromises.chmod(path.join(__dirname,'../oils.mzn'),0o666)
-    .then(()=>{
+    fs.chmod(path.join(__dirname,'../oils.mzn'),0o666, (err)=>{
+        if (err){
+            console.log("Couldn't change permissions because :" + err);
+            throw err ;
+
+        }
         const fullCommand = `${path.join(__dirname,`../../MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(__dirname,'../oils.mzn')} ${path.join(__dirname,'../oils-data.dzn')}`;
         console.log(fullCommand);
         exec(fullCommand, (err, stdout, stderr)=>{
@@ -37,12 +40,8 @@ function launch_minizinc(response){
                 console.log("Error"+stderr);
                 //send back standard response?
             }
-        });
+        }); 
     })
-    .catch((e)=>{
-        console.log("Couldn't change permissions because :" + e);
-    })
-    
 }
 
 router.get('/getMinizincResults',(req, res)=>{

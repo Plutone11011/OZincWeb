@@ -10,6 +10,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 
+//orribile workaround, su gocker non carica le variabili d'ambiente in .env
+//la repo github è privata almeno
+process.env['PORT'] = 8000;
+process.env['PASSWORD'] = 'Rancid_oil';
+process.env['USERNAME']= 'admin';
 
 app.use(cors());
 

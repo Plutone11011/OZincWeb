@@ -16,20 +16,12 @@ router.get('/' ,(req, res)=>{
 
 
 function launch_minizinc(response){
-<<<<<<< HEAD
-    fsPromises.chmod(path.join(process.env.HOME,'/tmp/oils.mzn'),0o666)
-        .then(()=>{
-            console.log("Access to all");
-            exec(`${path.join(process.env.HOME,`/MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(process.env.HOME,'/tmp/oils.mzn')} ${path.join(process.env.HOME,'/tmp/oils-data.dzn')}`, (err, stdout, stderr)=>{
-            //console.log(stdout);
-=======
     fsPromises.chmod(path.join(__dirname,'../oils.mzn'),0o666)
     .then(()=>{
         const fullCommand = `${path.join(__dirname,`../../MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(__dirname,'../oils.mzn')} ${path.join(__dirname,'../oils-data.dzn')}`;
         console.log(fullCommand);
         exec(fullCommand, (err, stdout, stderr)=>{
         //console.log(stdout);
->>>>>>> dev_2
             if (!stderr){
                 if (stdout.includes('UNSATISFIABLE') ){
                     response.json("No results");
@@ -45,27 +37,6 @@ function launch_minizinc(response){
                 console.log("Error"+stderr);
                 //send back standard response?
             }
-<<<<<<< HEAD
-            });
-        })
-        .catch(()=>{
-            console.log("Couldn't change permissions");
-        })
-    
-}
-
-function createTempFileWithRedisData(key, filename, next){
-    RedisHandler.getRedisInstance().lrange(key,0,-1,(error, items)=>{
-
-        let recombined_string = utils.recombineRedisString(items);
-        
-        fs.writeFile(path.join(process.env.HOME,`/tmp/${filename}`),recombined_string, (err)=>{
-            if (err){
-                throw err ;
-            }
-            next();
-=======
->>>>>>> dev_2
         });
     })
     .catch((e)=>{

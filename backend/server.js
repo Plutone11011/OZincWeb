@@ -12,9 +12,9 @@ const app = express();
 
 //orribile workaround, su gocker non carica le variabili d'ambiente in .env
 //la repo github è privata almeno
-process.env['PORT'] = 8000;
-process.env['PASSWORD'] = 'Rancid_oil';
-process.env['USERNAME']= 'admin';
+const PORT = 8000;
+const PASSWORD = 'Rancid_oil';
+const USERNAME = 'admin';
 
 app.use(cors());
 
@@ -27,18 +27,16 @@ app.use(express.static(path.join(__dirname, '../ozinc/build')));
 app.use(basicAuth({
     challenge: true,
     users: {
-        admin: process.env.PASSWORD
+        [USERNAME]: PASSWORD
     }        
 }));
 app.use('/',require(`${__dirname}/routes/index`));
 app.use('/data',require(`${__dirname}/routes/data`));
 
 
-const port = process.env.PORT || 8000;  
+const port = PORT || 8000;  
 // launch our backend into a port
 app.listen(port, function(){
-    console.log(process.env);
-    console.log(`Listening on port ${process.env.PORT}`);
     let data = fs.readFileSync(`${__dirname}/oils-data.dzn`,'utf-8');
     let model = fs.readFileSync(`${__dirname}/oils.mzn`,'utf-8');
 

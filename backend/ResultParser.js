@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 class MiniZnResults{
 
     constructor(){
@@ -22,9 +25,17 @@ class MiniZnResults{
 
     split_property(line, current_key){
         let [name, rate] = line.split(':');
-        name = name.replace(/_/g,' ').replace(/["\\]/g,'');
+        if (current_key === 'Target difference:'){
+            //no need to replace _ in this
+            //since we use json map
+            name = name.replace(/["\\]/g,'');
+        }
+        else if (current_key === 'Oils Composition:'){
+            name = name.replace(/_/g,' ').replace(/["\\]/g,''); 
+        }
         rate = rate.replace(/_/g,' ').replace(/["\\]/g,'');
-        this.result_object[current_key][name] = rate ;
+        return [name, rate];
+        //this.result_object[current_key][name] = rate ;
     }
 
     parse_results(mnzn_result){
@@ -33,6 +44,7 @@ class MiniZnResults{
         const lines = mnzn_result.split(/\r?\n/);
         const result_object_keys = Object.keys(this.result_object);
         let current_key = null ;
+        let map_name = JSON.parse(fs.readFileSync(path.join(__dirname,'name_map.json')));
         for (let line of lines){
             if (result_object_keys.includes(line)){
                 current_key = line ;
@@ -41,7 +53,9 @@ class MiniZnResults{
                 switch(current_key){
                     case 'Oils Composition:':
                         try{
-                            this.split_property(line, current_key);
+                            let [name, rate] = this.split_property(line, current_key);
+                            //console.log(name, rate);
+                            this.result_object[current_key][name] = rate ;
                         }
                         catch(e){
                             //console.log(e);
@@ -59,7 +73,9 @@ class MiniZnResults{
                         break ;
                     case 'Target difference:':
                         try{
-                            this.split_property(line, current_key);
+                            let [name, rate] = this.split_property(line, current_key);
+                            //console.log(map_name[name]["showed_name"]);
+                            this.result_object[current_key][map_name[name]["showed_name"]] = rate ;
                         }
                         catch(e){
                             //console.log(e);
@@ -78,8 +94,11 @@ class MiniZnResults{
                         //e.g. empty lines or other characters
                         break ;
                 }
+                
             }
         }
+        console.log(this.result_object);
+
     }
     
 }

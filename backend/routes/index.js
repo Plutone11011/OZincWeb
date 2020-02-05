@@ -22,7 +22,7 @@ function launch_minizinc(response){
 
         }
         const fullCommand = `${path.join(__dirname,`../../MiniZincIDE-2.3.2-bundle-linux/bin/${minizinc_executable}`)} --solver cbc ${path.join(__dirname,'../oils.mzn')} ${path.join(__dirname,'../oils-data.dzn')}`;
-        console.log(fullCommand);
+
         exec(fullCommand, (err, stdout, stderr)=>{
         //console.log(stdout);
             if (!stderr){
@@ -32,6 +32,7 @@ function launch_minizinc(response){
                 else {
                     let minizinc_results = new MiniZnResults();
                     minizinc_results.parse_results(stdout);
+                    console.log(minizinc_results.get_result_object['Oils Composition:']);
                     response.send(minizinc_results.get_result_object);
                 }
                 

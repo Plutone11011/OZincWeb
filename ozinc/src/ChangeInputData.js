@@ -27,6 +27,8 @@ class ChangeInputData extends React.Component {
     this.columnsDataField = range(11).map( n => `oil${n}`);
     this.columnsDataField.push('soglie');
     this.columnsDataField.push('sensibiltà');
+    this.columnsDataField.unshift('id','voc','cas');
+    //console.log(this.columnsDataField);
 
     //numeric factors
     this.cost_factor = 0 ;
@@ -69,7 +71,8 @@ class ChangeInputData extends React.Component {
         })
   }
 
-  onTableChange(type, newState){ 
+  onTableChange(type, newState){
+    console.log('celledit');
     if (type === 'cellEdit'){
       let rowIndex = this.rows.indexOf(newState.cellEdit.rowId);
       let columnIndex = this.columnsDataField.indexOf(newState.cellEdit.dataField);
@@ -102,7 +105,7 @@ class ChangeInputData extends React.Component {
 
   //save changes to server
   onButtonClick(){
-    console.log(this.concentrations);
+    //console.log(this.concentrations);
     fetch('/data/changeData',{
       method: 'PUT',
       headers: {
@@ -118,7 +121,17 @@ class ChangeInputData extends React.Component {
       })
   }
 
+  unEditableFirstRow(rowIndex){
+    if (rowIndex === 0){ //costi non editabile
+      return false ;
+    }  
+    else {
+      return true ;
+    }
+  }
+
   render() {
+    
     const rowStyle = (row, rowIndex) => {
       if (rowIndex == 0){
         return {
@@ -128,42 +141,58 @@ class ChangeInputData extends React.Component {
       
     };
     if (this.state.data){
+        console.log(this.state.data['concentrations']);
         let columns = this.state.data['oils'].map((name, index)=>{
             
             return {
-                dataField: this.columnsDataField[index],
-                text: name,
-                validator: (newValue, row, column)=>{
-                  let found = /^((0(\.\d+)?)|([1-9]\d*(\.\d+)?))$/g.test(newValue);
-                  if (!found){
-                    return {
-                      valid: false,
-                      message: 'Not a decimal number'
-                    }
+              dataField: this.columnsDataField[index+3],//+3 offset because first ones are unique col, voc and cas columns
+              text: name,
+              validator: (newValue, row, column)=>{
+                let found = /^((0(\.\d+)?)|([1-9]\d*(\.\d+)?))$/g.test(newValue);
+                if (!found){
+                  return {
+                    valid: false,
+                    message: 'Not a decimal number'
                   }
-                  return found ;
                 }
+                return found ;
+              },
+              editable: (cell, row, rowIndex, colIndex) =>{
+                if (name === 'Soglie' || name === 'Sensibilità'){
+                  return this.unEditableFirstRow(rowIndex);
+                }
+                else return true ;
+              }
             }
+
         });
-        columns.unshift({dataField: 'voc',text:'/', editable: false});
+        columns.unshift({dataField:'id', text:'/', hidden:true},
+          {dataField: 'voc',text:'VOC', editable: (cell, row, rowIndex, colIndex)=>{
+            return this.unEditableFirstRow(rowIndex);
+          }}, {dataField:'cas', text:'CAS', editable: (cell, row, rowIndex, colIndex)=>{
+            return this.unEditableFirstRow(rowIndex);
+          }});
         let products = [];
+        //console.log(this.state.data['concentrations']);
         this.state.data['concentrations'].forEach((conc, index)=>{
             
             products.push( {
-                voc: this.state.data['voc'][index],
-                [this.columnsDataField[0]]: conc[0],
-                [this.columnsDataField[1]]: conc[1],
-                [this.columnsDataField[2]]: conc[2],
-                [this.columnsDataField[3]]: conc[3],
-                [this.columnsDataField[4]]: conc[4],
-                [this.columnsDataField[5]]: conc[5],
-                [this.columnsDataField[6]]: conc[6],
-                [this.columnsDataField[7]]: conc[7],
-                [this.columnsDataField[8]]: conc[8],
-                [this.columnsDataField[9]]: conc[9],
-                [this.columnsDataField[10]]: conc[10],
-                [this.columnsDataField[11]]: conc[11], //soglie
-                [this.columnsDataField[12]]: conc[12] 
+                [this.columnsDataField[0]]: index,
+                [this.columnsDataField[1]]: this.state.data['voc'][index],
+                [this.columnsDataField[2]]: index === 0 ? '/' : 'CAS',
+                [this.columnsDataField[3]]: conc[0],
+                [this.columnsDataField[4]]: conc[1],
+                [this.columnsDataField[5]]: conc[2],
+                [this.columnsDataField[6]]: conc[3],
+                [this.columnsDataField[7]]: conc[4],
+                [this.columnsDataField[8]]: conc[5],
+                [this.columnsDataField[9]]: conc[6],
+                [this.columnsDataField[10]]: conc[7],
+                [this.columnsDataField[11]]: conc[8],
+                [this.columnsDataField[12]]: conc[9],
+                [this.columnsDataField[13]]: conc[10],
+                [this.columnsDataField[14]]: conc[11], //soglie
+                [this.columnsDataField[15]]: conc[12] 
             });
         });
         return (
@@ -204,7 +233,7 @@ class ChangeInputData extends React.Component {
             <BootstrapTable
               bootstrap4={true}
               data={products} 
-              keyField='voc' 
+              keyField='id' 
               columns={columns}
               rowStyle={ rowStyle }
               remote={ {

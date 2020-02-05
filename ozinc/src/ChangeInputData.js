@@ -36,6 +36,8 @@ class ChangeInputData extends React.Component {
     this.max_cost = 0 ;
     this.max_distance = 0;
 
+    this.cas = null;
+
     this.onTableChange = this.onTableChange.bind(this);
     this.onButtonClick = this.onButtonClick.bind(this);
     this.onNumChange = this.onNumChange.bind(this);
@@ -76,6 +78,9 @@ class ChangeInputData extends React.Component {
     if (type === 'cellEdit'){
       let rowIndex = this.rows.indexOf(newState.cellEdit.rowId);
       let columnIndex = this.columnsDataField.indexOf(newState.cellEdit.dataField);
+      //if (columnIndex <= 2){
+      //  this  
+      //}
       this.concentrations[rowIndex][columnIndex] = parseFloat(newState.cellEdit.newValue);
       this.setState( {data: {
         voc: this.rows,

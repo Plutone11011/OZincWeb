@@ -7,8 +7,8 @@ router.get('/',(req, res)=>{
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'));
 });
 
-function getOilorVOCsNames(data, name){
-    let model_variable_name = name;
+function getOilsNames(data){
+    let model_variable_name = 'Oils';
     let model_variable_index, model_variable_target_index, begin_variable_array,
             end_variable_array, end_variable_target_array, begin_variable_target_array ;
 
@@ -38,17 +38,23 @@ function getOilorVOCsNames(data, name){
     }
     oils_names_array.push(tmp.trim());
 
-    if (name === 'Oils'){
-        model_variable_name = 'Target_name';
-        [model_variable_index, model_variable_target_index] = utils
-            .findVariableModelIndexes(model_variable_name, data);
-        [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
-            .findArrayIndexes('"',';',model_variable_index, model_variable_target_index, data);
-        
-        oils_names_array.push(data.slice(begin_variable_array, end_variable_array).replace(/_/g,' ').replace(/"/g,''));
+    model_variable_name = 'Target_name';
+    [model_variable_index, model_variable_target_index] = utils
+        .findVariableModelIndexes(model_variable_name, data);
+    [begin_variable_array, end_variable_array, begin_variable_target_array, end_variable_target_array] = utils
+        .findArrayIndexes('"',';',model_variable_index, model_variable_target_index, data);
     
-    }
+    oils_names_array.push(data.slice(begin_variable_array, end_variable_array).replace(/_/g,' ').replace(/"/g,''));
+
     return oils_names_array;
+}
+function getVOCnames(data){
+    
+    const obj = JSON.parse(data);
+    let voc_names = Object.keys(obj).map(model_name => obj[model_name]["showed_name"]);
+
+    return voc_names;
+
 }
 
 function getConcentrations(data){
@@ -136,8 +142,7 @@ router.get('/concentrations',(req,res)=>{
         let result = {};
 
         result['costs'] = getCosts(data_file_content);
-        result['oils'] = getOilorVOCsNames(data_file_content, 'Oils');
-        result['voc'] = getOilorVOCsNames(data_file_content, 'VOCs');
+        result['oils'] = getOilsNames(data_file_content);
         result['concentrations'] = getConcentrations(data_file_content);
         result['thresholds'] = getArray(data_file_content, 'thresholds');
         result['sensitivity'] = getArray(data_file_content, 'sensitivity');
@@ -145,8 +150,13 @@ router.get('/concentrations',(req,res)=>{
         result['cost_factor'] = getSingleVariable(data_file_content, 'cost_factor');
         result['max_cost'] = getSingleVariable(data_file_content,'MAX_COST');
         result['max_distance'] = getSingleVariable(data_file_content, 'MAX_DIST');
+        fs.readFile(path.join(__dirname,'../name_map.json'), (err,data)=>{
+            if (err) throw err ;
+            result['voc'] = getVOCnames(data);
+            res.json(result);
+        });
         //console.log(result);
-        res.json(result);
+
     });
         
 });

@@ -47,9 +47,11 @@ class ChangeInputData extends React.Component {
       fetch('/data/concentrations')
         .then(response => response.json())
         .then((res) => {
-            console.log(res);
             this.rows = res['voc'];
             this.rows.unshift('Costi');
+            this.cas = res['cas'];
+            this.cas.unshift('/');
+
             this.concentrations = res['concentrations'];
             this.concentrations.unshift(res['costs']);
             this.concentrations.forEach((arr, index)=>{
@@ -62,6 +64,7 @@ class ChangeInputData extends React.Component {
                 arr.push('/');
               }
             });
+
             this.columns = res['oils'];
             this.columns.push('Soglie');
             this.columns.push('Sensibilità');
@@ -76,18 +79,32 @@ class ChangeInputData extends React.Component {
   onTableChange(type, newState){
     console.log('celledit');
     if (type === 'cellEdit'){
-      let rowIndex = this.rows.indexOf(newState.cellEdit.rowId);
+      let rowIndex = newState.cellEdit.rowId;
       let columnIndex = this.columnsDataField.indexOf(newState.cellEdit.dataField);
-      //if (columnIndex <= 2){
-      //  this  
-      //}
-      this.concentrations[rowIndex][columnIndex] = parseFloat(newState.cellEdit.newValue);
-      this.setState( {data: {
-        voc: this.rows,
-        oils: this.columns,
-        concentrations: this.concentrations
-      }});
-
+      console.log(rowIndex, columnIndex);
+      if (columnIndex == 1){
+        //voc name
+        this.rows[rowIndex] = newState.cellEdit.newValue;
+      }
+      else if (columnIndex == 2){
+        this.cas[rowIndex] = newState.cellEdit.newValue;
+      }
+      else {
+        this.concentrations[rowIndex][columnIndex-3] = parseFloat(newState.cellEdit.newValue);
+  
+      }
+      this.setState({
+        data: {
+          voc: this.rows,
+          concentrations: this.concentrations,
+          cas: this.cas,
+          oils: this.columns,
+          cost_factor: this.cost_factor,
+          distance_factor: this.distance_factor,
+          max_cost: this.max_cost,
+          max_distance: this.max_distance
+        }
+      });
     }
 
   }
@@ -118,7 +135,7 @@ class ChangeInputData extends React.Component {
       },
       body: JSON.stringify({newCnc: this.concentrations, 
         newFactors: {cost : this.cost_factor, distance: this.distance_factor},
-         maxCost: this.max_cost, maxDist: this.max_distance})
+         maxCost: this.max_cost, maxDist: this.max_distance, vocNames: this.rows, cas: this.cas})
     })
       .then(response => response.json())
       .then((result)=>{
@@ -146,7 +163,6 @@ class ChangeInputData extends React.Component {
       
     };
     if (this.state.data){
-        console.log(this.state.data['concentrations']);
         let columns = this.state.data['oils'].map((name, index)=>{
             
             return {
@@ -184,7 +200,7 @@ class ChangeInputData extends React.Component {
             products.push( {
                 [this.columnsDataField[0]]: index,
                 [this.columnsDataField[1]]: this.state.data['voc'][index],
-                [this.columnsDataField[2]]: index === 0 ? '/' : 'CAS',
+                [this.columnsDataField[2]]: this.state.data['cas'][index],
                 [this.columnsDataField[3]]: conc[0],
                 [this.columnsDataField[4]]: conc[1],
                 [this.columnsDataField[5]]: conc[2],
@@ -213,24 +229,24 @@ class ChangeInputData extends React.Component {
             <Form.Row>
               <Form.Group as={Col}>
                 <Form.Label className={'form'}>Importanza fattore distanza</Form.Label>
-                <NumericInput id="distance" min={0} max={100} value={this.distance_factor} 
+                <NumericInput id="distance" min={0} max={100} value={this.state.data["distance_factor"]} 
                   step={0.1} precision={1} onChange={this.onNumChange}/>
               </Form.Group>
               <Form.Group as={Col}>
                 <Form.Label className={'form'}>Importanza fattore costo</Form.Label>
-                <NumericInput id="cost" min={0} max={100} value={this.cost_factor}
+                <NumericInput id="cost" min={0} max={100} value={this.state.data["cost_factor"]}
                 step={0.1} precision={1} onChange={this.onNumChange}/>
               </Form.Group>
             </Form.Row>
             <Form.Row>
               <Form.Group as={Col}>
                 <Form.Label className={'form'}>Costo massimo ammissibile</Form.Label>
-                <NumericInput id="max_cost" min={0} value={this.max_cost}
+                <NumericInput id="max_cost" min={0} value={this.state.data["max_cost"]}
                 step={0.1} precision={1} onChange={this.onNumChange}/>
               </Form.Group>
               <Form.Group as={Col}>
                 <Form.Label className={'form'}>Distanza massima</Form.Label>
-                <NumericInput id="max_dist" min={0} value={this.max_distance}
+                <NumericInput id="max_dist" min={0} value={this.state.data["max_distance"]}
                 step={0.1} precision={1} onChange={this.onNumChange}/>
               </Form.Group>
             </Form.Row>

@@ -48,10 +48,11 @@ function getOilsNames(data){
 
     return oils_names_array;
 }
-function getVOCnames(data){
+//read from json
+function getVOCs(data, prop){
     
     const obj = JSON.parse(data);
-    let voc_names = Object.keys(obj).map(model_name => obj[model_name]["showed_name"]);
+    let voc_names = Object.keys(obj).map(model_name => obj[model_name][prop]);
 
     return voc_names;
 
@@ -152,7 +153,8 @@ router.get('/concentrations',(req,res)=>{
         result['max_distance'] = getSingleVariable(data_file_content, 'MAX_DIST');
         fs.readFile(path.join(__dirname,'../name_map.json'), (err,data)=>{
             if (err) throw err ;
-            result['voc'] = getVOCnames(data);
+            result['voc'] = getVOCs(data, "showed_name");
+            result['cas'] = getVOCs(data, "CAS");
             res.json(result);
         });
         //console.log(result);
@@ -249,13 +251,24 @@ function changeFactors(data_file_content, model_variable_name, factor){
     return data_file_content ;
 }
 
+function changeJSONobjectContent(data, vocNames, cas){
+    let obj = JSON.parse(data);
+
+    let i = 0;
+    for (let [model_name, val] of Object.entries(obj)){
+        val["showed_name"] = vocNames[i];
+        val["CAS"] = cas[i];
+        i++;
+    }
+
+    return JSON.stringify(obj);
+}
 
 router.put('/changeData',(req,res,next)=>{
     
     fs.readFile(path.join(__dirname,'../oils-data.dzn'),'utf-8',(error, data)=>{
         
         let concentration_target_array = [], thresholds = [], sensitivity = [] ;
-
         let data_file_content = data;
         
         let cost_array = req.body.newCnc.shift();
@@ -269,6 +282,10 @@ router.put('/changeData',(req,res,next)=>{
         });
         let concentration_matrix_string = req.body.newCnc.join();
         let concentration_target_string = concentration_target_array.join();
+
+        //voc e cas, primi elementi inutili
+        req.body.vocNames.splice(0,1);
+        req.body.cas.splice(0,1);
         
         data_file_content = changeConcentrations(data_file_content, concentration_matrix_string, concentration_target_string);
         data_file_content = changeCosts(data_file_content, cost_array);
@@ -278,15 +295,27 @@ router.put('/changeData',(req,res,next)=>{
         data_file_content = changeFactors(data_file_content,'cost_factor', req.body.newFactors.cost);
         data_file_content = changeFactors(data_file_content,'MAX_COST', req.body.maxCost);
         data_file_content = changeFactors(data_file_content, 'MAX_DIST', req.body.maxDist);
+
+        fs.readFile(path.join(__dirname, '../name_map.json'), (err, data)=>{
+            if (err) throw err;
+            
+            //stringified and modified json file
+            let obj = changeJSONobjectContent(data, req.body.vocNames, req.body.cas);
+            fs.writeFile(path.join(__dirname, '../name_map.json'), obj, (err)=>{
+                if (err) throw err;
+
+                fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
+                    if (err){
+                        throw err ;
+                    }
+                    res.sendStatus(200);
+                });
+            })
+        } );
         //console.log(data_file_content);
         //now costs
         
-        fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
-            if (err){
-                throw err ;
-            }
-            res.sendStatus(200);
-        });
+
     });
 });
 

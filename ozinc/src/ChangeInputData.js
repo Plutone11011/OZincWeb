@@ -112,10 +112,32 @@ class ChangeInputData extends React.Component {
   onNumChange(valueNumber, valueString, input){
     console.log(valueNumber, valueString, input);
     if (input.id === 'distance'){
-      this.distance_factor = valueNumber;
+      if (valueNumber > 1){
+        alert("Sopra valore massimo");
+        this.distance_factor = 1.0 ;
+      }
+      else if (valueNumber < 0){
+        alert("Sotto valore minimo");
+        this.distance_factor = 0;
+      }
+      else {
+        this.distance_factor = valueNumber;
+      }
+      
     }
     else if (input.id === 'cost'){
-      this.cost_factor = valueNumber;
+      if (valueNumber > 1){
+        alert("Sopra valore massimo");
+        this.cost_factor = 1.0;
+      }
+      else if (valueNumber < 0){
+        alert("Sotto valore minimo");
+        this.cost_factor = 1.0 ;
+      }
+      else {
+        this.cost_factor = valueNumber;
+      }
+      
     }
     else if (input.id === 'max_cost'){
       this.max_cost = valueNumber;
@@ -123,6 +145,18 @@ class ChangeInputData extends React.Component {
     else {
       this.max_distance = valueNumber;
     }
+    this.setState({
+      data: {
+        voc: this.rows,
+        concentrations: this.concentrations,
+        cas: this.cas,
+        oils: this.columns,
+        cost_factor: this.cost_factor,
+        distance_factor: this.distance_factor,
+        max_cost: this.max_cost,
+        max_distance: this.max_distance        
+      }
+    });
   }
 
   //save changes to server
@@ -229,12 +263,12 @@ class ChangeInputData extends React.Component {
             <Form.Row>
               <Form.Group as={Col}>
                 <Form.Label className={'form'}>Importanza fattore distanza</Form.Label>
-                <NumericInput id="distance" min={0} max={100} value={this.state.data["distance_factor"]} 
+                <NumericInput id="distance" min={0} max={1} value={this.state.data["distance_factor"]} 
                   step={0.1} precision={1} onChange={this.onNumChange}/>
               </Form.Group>
               <Form.Group as={Col}>
                 <Form.Label className={'form'}>Importanza fattore costo</Form.Label>
-                <NumericInput id="cost" min={0} max={100} value={this.state.data["cost_factor"]}
+                <NumericInput id="cost" min={0} max={1} value={this.state.data["cost_factor"]}
                 step={0.1} precision={1} onChange={this.onNumChange}/>
               </Form.Group>
             </Form.Row>

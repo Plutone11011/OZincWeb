@@ -4,7 +4,7 @@
   "description": "A website to view minizinc results",
   "main": "index.js",
   "scripts": {
-    "prestart":"cd ozinc && npm run build",
+    "prestart": "cd ozinc && npm run build",
     "start": "cd backend && node server.js"
   },
   "repository": {
@@ -18,9 +18,6 @@
     "url": "https://github.com/Plutone11011/OZinc_Web/issues"
   },
   "homepage": "https://github.com/Plutone11011/OZinc_Web#readme",
-  "dependencies": {
-    "concurrently": "^5.0.0"
-  },
   "engines": {
     "node": "10.17.x"
   }

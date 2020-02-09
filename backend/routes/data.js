@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const utils = require('../utils');
 
-router.get('/',(req, res)=>{
+router.get('/*',(req, res)=>{
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'));
 });
 

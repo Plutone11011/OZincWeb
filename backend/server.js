@@ -37,7 +37,5 @@ app.use('/data',require(`${__dirname}/routes/data`));
 const port = PORT || 8000;  
 // launch our backend into a port
 app.listen(port, function(){
-    let data = fs.readFileSync(`${__dirname}/oils-data.dzn`,'utf-8');
-    let model = fs.readFileSync(`${__dirname}/oils.mzn`,'utf-8');
-
+    console.log("Listening on port "+port);
 });

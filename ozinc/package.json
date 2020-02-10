@@ -34,5 +34,5 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "http://lorenzo.borelli.tw.cs.unibo.it"
+  "proxy":"localhost:8000"
 }

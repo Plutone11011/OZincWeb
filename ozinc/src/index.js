@@ -4,16 +4,16 @@ import './index.css';
 import * as serviceWorker from './serviceWorker';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from 'react-bootstrap/Navbar';
-import Nav from 'react-bootstrap/Nav';
+//import Nav from 'react-bootstrap/Nav';
 import Button from 'react-bootstrap/Button';
-import {
+/*import {
     BrowserRouter,
     Switch,
     Route,
     Link
   } from "react-router-dom";
 import NavItem from 'react-bootstrap/NavItem';
-import NavLink from 'react-bootstrap/NavLink';
+import NavLink from 'react-bootstrap/NavLink';*/
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 //Custom components
@@ -102,108 +102,76 @@ class App extends React.Component{
             if (this.state.noResult){
                 console.log("Noresult");
                 return (
-                <BrowserRouter>
-                <Navbar className="bg-olive" expand="lg" sticky='top'>
-                    <Navbar.Brand href="">OZinc</Navbar.Brand>
-                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                    <Navbar.Collapse id="basic-navbar-nav">
-                        <Nav className="mr-auto">
-                            <NavItem href="/">
-                                <NavLink as={Link} to="/">Home</NavLink>
-                            </NavItem>
-                            <NavItem href="/data">
-                                <NavLink as={Link} to="/data">Dati</NavLink>
-                            </NavItem>
-                            
-                        </Nav>
-                    </Navbar.Collapse>
-                </Navbar>
-                <Switch>
-                    <Route path="/data">
-                        <ChangeInputData/>
-                    </Route>
-                    <Route path="/">
-                        <div style={{
-                                display: 'flex',
-                                width: '30%',
-                                height: '50px',
-                                alignItems: 'center', 
-                                justifyContent: 'flex-start'
-                            }}>
-                            <Button variant="primary" disabled={this.isLoading} 
-                                onClick={this.onButtonClick}
-                                style={{
-                                    margin: '20px'
-                                }}>
-                                {'Calcola'}
-                            </Button>
-                            </div>
-                            <p style={{
-                                textAlign: 'center',
-                                fontSize: '2.5em'
-                            }}>{'Nessun risultato con questi dati!'}</p>
-                            
-                        </Route>
-                    </Switch>
-                </BrowserRouter>
+                <div>
+                    <Navbar className="bg-olive" expand="lg" sticky='top'>
+                        <Navbar.Brand href="">OZinc</Navbar.Brand>
+                        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                    </Navbar>
+                <div style={{
+                        display: 'flex',
+                        width: '30%',
+                        height: '50px',
+                        alignItems: 'center', 
+                        justifyContent: 'flex-start'
+                    }}>
+                    <Button variant="primary" disabled={this.isLoading} 
+                        onClick={this.onButtonClick}
+                        style={{
+                            margin: '20px'
+                        }}>
+                        {'Calcola'}
+                    </Button>
+                    </div>
+                    <p style={{
+                        textAlign: 'center',
+                        fontSize: '2.5em'
+                    }}>{'Nessun risultato con questi dati!'}</p>
+                    <h2>Tabella dei dati</h2>
+                    <ChangeInputData/>
+                    </div>
                 );
             }
             else {
                 console.log("Result");
                 return (
-                    <BrowserRouter>
+                    <div>
                     <Navbar className="bg-olive" expand="lg" sticky='top'>
                         <Navbar.Brand href="">OZinc</Navbar.Brand>
                         <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                        <Navbar.Collapse id="basic-navbar-nav">
-                            <Nav className="mr-auto">
-                                <NavItem href="/">
-                                    <NavLink as={Link} to="/">Home</NavLink>
-                                </NavItem>
-                                <NavItem href="/data">
-                                    <NavLink as={Link} to="/data">Dati</NavLink>
-                                </NavItem>
-                                
-                            </Nav>
-                        </Navbar.Collapse>
                     </Navbar>
-                    <Switch>
-                        <Route path="/data">
-                            <ChangeInputData/>
-                        </Route>
-                        <Route path="/">
-                            <div style={{
-                                display: 'flex',
-                                width: '30%',
-                                height: '50px',
-                                alignItems: 'center', 
-                                justifyContent: 'flex-start'
-                            }}>
-                            <DropdownButton 
-                                title="Target" 
-                                id={"dropdown-variants-primary"} 
-                                variant="primary" 
-                                style={{
-                                    margin: '20px'
-                                }}>
-                                    {Object.keys(this.state.result["Oils Composition:"]).map((oil_names, index) => (
-                                        <Dropdown.Item eventKey={'navdropdown'+oil_names} onClick={this.onOilsListClick}>{oil_names}</Dropdown.Item> 
-                                    ))}
-                                
-                            <Dropdown.Item eventKey={'navdropdown_target'} style={{color: '#708238'}} onClick={this.onOilsListClick}>{this.state.result['Target name:']}</Dropdown.Item>
-                            </DropdownButton>
-                            <Button variant="primary" disabled={this.isLoading} 
-                                onClick={this.onButtonClick}
-                                style={{
-                                    margin: '20px'
-                                }}>
-                                {'Calcola'}
-                            </Button>
-                            </div>
-                            <OilsTable results={this.state.result} />
-                        </Route>
-                    </Switch>
-                </BrowserRouter>
+                    <h2>Tabella dei risultati</h2>
+                    <div style={{
+                        display: 'flex',
+                        width: '30%',
+                        height: '50px',
+                        alignItems: 'center', 
+                        justifyContent: 'flex-start'
+                    }}>
+                    <DropdownButton 
+                        title="Target" 
+                        id={"dropdown-variants-primary"} 
+                        variant="primary" 
+                        style={{
+                            margin: '20px'
+                        }}>
+                            {Object.keys(this.state.result["Oils Composition:"]).map((oil_names, index) => (
+                                <Dropdown.Item eventKey={'navdropdown'+oil_names} onClick={this.onOilsListClick}>{oil_names}</Dropdown.Item> 
+                            ))}
+                        
+                    <Dropdown.Item eventKey={'navdropdown_target'} style={{color: '#708238'}} onClick={this.onOilsListClick}>{this.state.result['Target name:']}</Dropdown.Item>
+                    </DropdownButton>
+                    <Button variant="primary" disabled={this.isLoading} 
+                        onClick={this.onButtonClick}
+                        style={{
+                            margin: '20px'
+                        }}>
+                        {'Calcola'}
+                    </Button>
+                    </div>
+                    <OilsTable results={this.state.result} />
+                    <h2>Tabella dei dati</h2>
+                    <ChangeInputData/>
+                    </div>
                 );
             }
     

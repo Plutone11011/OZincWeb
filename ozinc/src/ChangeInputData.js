@@ -173,7 +173,7 @@ class ChangeInputData extends React.Component {
     })
       .then(response => response.json())
       .then((result)=>{
-          
+          console.log(result);
       })
   }
 
@@ -285,6 +285,7 @@ class ChangeInputData extends React.Component {
               </Form.Group>
             </Form.Row>
           </Form>
+          
             <BootstrapTable
               bootstrap4={true}
               data={products} 

@@ -3,9 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const utils = require('../utils');
 
-router.get('/*',(req, res)=>{
-    res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'));
-});
 
 function getOilsNames(data){
     let model_variable_name = 'Oils';
@@ -319,4 +316,7 @@ router.put('/changeData',(req,res,next)=>{
     });
 });
 
+router.get('/*',(req, res)=>{
+    res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'));
+});
 module.exports = router ;

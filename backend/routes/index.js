@@ -9,7 +9,7 @@ const utils = require('../utils');
 //only in dev
 const minizinc_executable = process.platform == 'win32' ? 'minizinc.exe' : 'minizinc' ;
 
-router.get('/*' ,(req, res)=>{
+router.get('/' ,(req, res)=>{
     console.log(__dirname);
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'))
 });

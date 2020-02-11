@@ -2,6 +2,7 @@ var router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
 const utils = require('../utils');
+var sem = require('semaphore')(1);
 
 router.get('/',(req, res)=>{
     res.sendFile(path.join(__dirname, '../../ozinc/build/index.html'));
@@ -296,22 +297,26 @@ router.put('/changeData',(req,res,next)=>{
         data_file_content = changeFactors(data_file_content,'MAX_COST', req.body.maxCost);
         data_file_content = changeFactors(data_file_content, 'MAX_DIST', req.body.maxDist);
 
-        fs.readFile(path.join(__dirname, '../name_map.json'), (err, data)=>{
-            if (err) throw err;
-            
-            //stringified and modified json file
-            let obj = changeJSONobjectContent(data, req.body.vocNames, req.body.cas);
-            fs.writeFile(path.join(__dirname, '../name_map.json'), obj, (err)=>{
+        sem.take(function(){
+            fs.readFile(path.join(__dirname, '../name_map.json'), (err, data)=>{
                 if (err) throw err;
-
-                fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
-                    if (err){
-                        throw err ;
-                    }
-                    res.sendStatus(200);
-                });
-            })
-        } );
+                
+                //stringified and modified json file
+                let obj = changeJSONobjectContent(data, req.body.vocNames, req.body.cas);
+                fs.writeFile(path.join(__dirname, '../name_map.json'), obj, (err)=>{
+                    if (err) throw err;
+    
+                    fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
+                        sem.leave();
+                        if (err){
+                            throw err ;
+                        }
+                        res.sendStatus(200);
+                    });
+                })
+            } );
+    
+        });
         //console.log(data_file_content);
         //now costs
         

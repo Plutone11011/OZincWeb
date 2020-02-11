@@ -2,6 +2,7 @@ var router = require('express').Router();
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+var sem = require('semaphore')(1); //only one client at time accesses resources
 //local modules
 const MiniZnResults = require('../ResultParser');
 const utils = require('../utils');
@@ -137,13 +138,16 @@ router.put('/changeTarget', (req, res, next)=>{
         data_file_content = updateMatrix("concentrations", data_file_content, index_to_swap, numberOfNonTarget);
 
         
-        
-        fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
-            if (err){
-                throw err ;
-            }
-            res.sendStatus(200);
+        sem.take(function (){
+            fs.writeFile(path.join(__dirname,'../oils-data.dzn'),data_file_content, (err)=>{
+                sem.leave();
+                if (err){
+                    throw err ;
+                }
+                res.sendStatus(200);
+            });
         });
+
     
     });
 });

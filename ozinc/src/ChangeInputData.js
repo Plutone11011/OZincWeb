@@ -171,7 +171,6 @@ class ChangeInputData extends React.Component {
         newFactors: {cost : this.cost_factor, distance: this.distance_factor},
          maxCost: this.max_cost, maxDist: this.max_distance, vocNames: this.rows, cas: this.cas})
     })
-      .then(response => response.json())
       .then((result)=>{
           console.log(result);
       })

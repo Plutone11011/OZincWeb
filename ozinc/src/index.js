@@ -66,7 +66,6 @@ class App extends React.Component{
             },
             body: JSON.stringify({previousTarget: this.state.target, nextTarget: e.target.text})
         })
-            .then(response => response.json())
             .then((result)=>{
                 console.log(result);
             })

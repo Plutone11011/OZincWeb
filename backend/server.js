@@ -20,7 +20,10 @@ app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(logger('dev'));
+app.use(logger('common', {
+    stream: fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'}),
+    immediate: true
+}));
 
 app.use(express.static(path.join(__dirname, '../ozinc/build')));
 
@@ -32,7 +35,6 @@ app.use(basicAuth({
 }));
 app.use('/',require(`${__dirname}/routes/index`));
 app.use('/data',require(`${__dirname}/routes/data`));
-
 
 const port = PORT || 8000;  
 // launch our backend into a port

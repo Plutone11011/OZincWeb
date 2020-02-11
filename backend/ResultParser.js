@@ -97,7 +97,6 @@ class MiniZnResults{
                 
             }
         }
-        console.log(this.result_object);
 
     }
     

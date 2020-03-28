@@ -2,8 +2,8 @@
 
 # GETTING STARTED
 
-*npm install* per installare le dipendenze.
-*npm start* per buildare react, e lanciare il server (vedi package.json).
+* *npm install* per installare le dipendenze.
+* *npm start* per buildare react, e lanciare il server (vedi package.json).
 
 # Backend
 

@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 
-//orribile workaround, su gocker non carica le variabili d'ambiente in .env
+//orribile workaround, su gocker non vedo le variabili d'ambiente in .env
 //la repo github è privata almeno
 const PORT = 8000;
 const PASSWORD = 'Rancid_oil';

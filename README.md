@@ -7,8 +7,7 @@
 
 # Backend
 
-* *server.js* carica tutti i middleware, tra cui anche i router in *routes* e lancia il server. Utilizza anche un modulo per semplice autenticazione
-(per ora username e password sono costanti con scope globale ma andrebbero messe in un .env ignorato da git, anche se la repo è privata).
+* *server.js* carica tutti i middleware, tra cui anche i router in *routes* e lancia il server. Utilizza anche un modulo per semplice autenticazione.
 * *utils.js* contiene alcune funzioni usate per parsare i file di minizinc
 * *ResultParser.js* classe che parsa la stringa di output di minizinc e ritorna un oggetto da fornire al client. Itera sulle righe del risultato, aggiornando ogni volta la chiave corrente.
 * *routes/index.js* lancia Minizinc in background e recupera i risultati con ResultParser. L'eseguibile di MiniZinc è linkato staticamente. Inoltre implementa la funzionalità di scelta del target, che comporta la modifica del file di dati, in particolare lo scambio di una colonna della stringa delle concentrazioni con l'array delle concentrazioni del target.
